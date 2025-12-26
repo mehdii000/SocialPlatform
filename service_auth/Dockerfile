@@ -20,11 +20,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
-COPY . .
+COPY /app .
 
 # Expose the port Flask will run on
 EXPOSE 5000
 
 # Command to run the application
 # We use Flask's development server for hot-reloading (specified in docker-compose)
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD ["python", "app.py"]
+
+# docker build -t auth-service-backend .
+# docker run -it --rm --name auth-service -p 5000:5000 auth-service-backend
