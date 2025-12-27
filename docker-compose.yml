@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: mehdi
+      POSTGRES_DB: socialdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d socialdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  auth-service:
+    build: /service_auth
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://user:mehdi@db:5432/socialdb
+    depends_on:
+      db:
+        condition: service_healthy
+  
+volumes:
+  postgres_data:
