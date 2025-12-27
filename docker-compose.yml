@@ -20,7 +20,11 @@ services:
       - app-network
 
   auth-service:
-    build: ./service_auth
+    build:
+      context: .
+      dockerfile: GenericPyService.Dockerfile
+      args:
+        - SERVICE_DIR=service_auth
     ports:
       - "5000:5000"
     environment:
@@ -33,7 +37,11 @@ services:
       - app-network
 
   users-service:
-    build: ./service_users
+    build:
+      context: .
+      dockerfile: GenericPyService.Dockerfile
+      args:
+        - SERVICE_DIR=service_users
     environment:
       # Connect specifically to users_db
       - DATABASE_URL=postgresql://user:mehdi@db:5432/users_db

@@ -16,11 +16,13 @@ RUN apt-get update && apt-get install -y \
 
 # Install Python dependencies
 # We copy only requirements.txt first to leverage Docker's cache layer
-COPY requirements.txt .
+ARG SERVICE_DIR
+
+COPY ./${SERVICE_DIR}/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
-COPY /app .
+COPY ./${SERVICE_DIR}/app .
 
 # Command to run the application
 # We use Flask's development server for hot-reloading (specified in docker-compose)
