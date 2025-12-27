@@ -4,23 +4,48 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: mehdi
-      POSTGRES_DB: socialdb
+      # This remains the default DB, but we will create others
+      POSTGRES_DB: postgres 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Map our initialization script here
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d socialdb"]
+      # Use the default 'postgres' db for the healthcheck
+      test: ["CMD-SHELL", "pg_isready -U user -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
   auth-service:
-    build: /service_auth
+    build: ./service_auth
     ports:
       - "5000:5000"
     environment:
-      - DATABASE_URL=postgresql://user:mehdi@db:5432/socialdb
+      # Connect specifically to auth_db
+      - DATABASE_URL=postgresql://user:mehdi@db:5432/auth_db
     depends_on:
       db:
         condition: service_healthy
-  
+    networks:
+      - app-network
+
+  users-service:
+    build: ./service_users
+    environment:
+      # Connect specifically to users_db
+      - DATABASE_URL=postgresql://user:mehdi@db:5432/users_db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
 volumes:
   postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
