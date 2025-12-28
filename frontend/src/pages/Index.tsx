@@ -29,7 +29,7 @@ const Index = () => {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          By continuing, you agree to our Terms and Privacy Policy.
+          By continuing, you agree to our <u className="underline-offset-4 hover:text-primary cursor-pointer">Terms and Privacy Policy</u>.
         </p>
       </div>
     </div>
