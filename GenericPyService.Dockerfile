@@ -1,5 +1,5 @@
 # Use a slim version of Python to keep the image lightweight
-FROM python:3.11-alpine
+FROM python:3.11-slim
 
 # Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -12,8 +12,12 @@ WORKDIR /app
 # 1. build-base is the Alpine equivalent of build-essential
 # 2. postgresql-dev provides the headers for psycopg2
 # 3. libpq is the runtime library for PostgreSQL
-RUN apk add --no-cache postgresql-dev build-base libpq
-
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+    
 # Install Python dependencies
 ARG SERVICE_DIR
 
