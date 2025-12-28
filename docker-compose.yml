@@ -8,6 +8,7 @@ services:
     depends_on:
       - auth-service
       - users-service
+      - frontend
     networks:
       - app-network
 
@@ -63,7 +64,7 @@ services:
       - app-network
 
   frontend:
-    build: ./frontend/userPage
+    build: ./frontend
     networks:
       - app-network
 

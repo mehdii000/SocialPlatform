@@ -1,5 +1,5 @@
 # Use a slim version of Python to keep the image lightweight
-FROM python:3.11-slim
+FROM python:3.11-alpine
 
 # Prevent Python from writing .pyc files and enable unbuffered logging
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -8,25 +8,23 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory inside the container
 WORKDIR /app
 
-# Install system dependencies (needed for some Python packages like psycopg2)
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+# 1. build-base is the Alpine equivalent of build-essential
+# 2. postgresql-dev provides the headers for psycopg2
+# 3. libpq is the runtime library for PostgreSQL
+RUN apk add --no-cache postgresql-dev build-base libpq
 
 # Install Python dependencies
-# We copy only requirements.txt first to leverage Docker's cache layer
 ARG SERVICE_DIR
 
+# Copy requirements first to leverage Docker cache
 COPY ./${SERVICE_DIR}/requirements.txt .
+
+# Install dependencies and then remove build tools to keep the image small
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
 COPY ./${SERVICE_DIR}/app .
 
 # Command to run the application
-# We use Flask's development server for hot-reloading (specified in docker-compose)
 CMD ["python", "app.py"]
-
-# docker build -t users-service-backend .
-# docker run -it --rm --name users-service -p 5000:5000 users-service-backend

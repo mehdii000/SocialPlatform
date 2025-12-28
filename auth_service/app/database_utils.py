@@ -1,0 +1,78 @@
+import psycopg2
+
+def get_db_connection():
+    # Recommended: Use environment variables instead of hardcoding credentials
+    return psycopg2.connect(
+        host='db',
+        database='auth_db',
+        user='user',
+        password='mehdi'
+    )
+
+def db_init():
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS signup (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(30) UNIQUE NOT NULL,
+                    email VARCHAR(70) UNIQUE NOT NULL,
+                    hashed_password VARCHAR(255) NOT NULL
+                )
+            """)
+        connection.commit() # Save changes
+    finally:
+        connection.close()
+
+def is_username_taken(name):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            # Fixed: (name,) is a tuple, (name) is just a string in parentheses
+            cursor.execute("SELECT COUNT(*) FROM signup WHERE username = %s", (name,))
+            count = cursor.fetchone()[0]
+        return int(count) > 0
+    finally:
+        connection.close()
+    
+def is_email_taken(email):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM signup WHERE email = %s", (email,))
+            count = cursor.fetchone()[0]
+        return int(count) > 0
+    finally:
+        connection.close()
+
+def db_create_signup(username, email, hashed_password):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO signup (username, email, hashed_password) VALUES (%s, %s, %s)",
+                (username, email, hashed_password)
+            )
+        connection.commit() # CRITICAL: Changes must be committed
+    finally:
+        connection.close()
+
+def db_get_signups():
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id, username, email, hashed_password FROM signup")
+            users = cursor.fetchall()
+        
+        user_list = []
+        for user in users:
+            user_list.append({
+                "id": user[0],
+                "username": user[1],
+                "email": user[2],
+                "hashed_password": user[3]
+            })
+        return user_list
+    finally:
+        connection.close()
