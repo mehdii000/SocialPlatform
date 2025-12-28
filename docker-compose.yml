@@ -10,8 +10,8 @@ services:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d postgres"]
-      interval: 3s  # Faster checks during startup
-      timeout: 3s
+      interval: 3s
+      timeout: 5s
       retries: 5
       start_period: 5s # Gives the DB time to initialize before starting checks
     networks:
@@ -30,13 +30,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      # USE LOCALHOST HERE for faster internal pings
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 5s
-      timeout: 2s
-      retries: 3
-      start_period: 1s
+    # healthcheck:
+    #   # USE LOCALHOST HERE for faster internal pings
+    #   test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+    #   interval: 30s
+    #   timeout: 3s
+    #   retries: 3
+    #   start_period: 1s
     networks:
       - app-network
 
@@ -53,23 +53,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 5s
-      timeout: 2s
-      retries: 3
-      start_period: 1s
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+    #   interval: 30s
+    #   timeout: 3s
+    #   retries: 3
+    #   start_period: 1s
     networks:
       - app-network
 
   # Removed healthcheck from Frontend/Gateway as they are "leaf" services
   frontend:
     build: ./frontend
+    volumes:
+      - ./frontend/src:/app/src
     depends_on:
       auth-service:
-        condition: service_healthy
+        condition: service_started
       users-service:
-        condition: service_healthy
+        condition: service_started
     networks:
       - app-network
 
@@ -81,9 +83,9 @@ services:
       - ./gateway_service/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       auth-service:
-        condition: service_healthy
+        condition: service_started
       users-service:
-        condition: service_healthy
+        condition: service_started
       frontend:
         condition: service_started
     networks:
