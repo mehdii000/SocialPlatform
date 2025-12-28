@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AuthInput from "./AuthInput";
 import AuthButton from "./AuthButton";
+import GuestButton from "./GuestButton";
 import { toast } from "@/hooks/use-toast";
 
 const LoginForm = () => {

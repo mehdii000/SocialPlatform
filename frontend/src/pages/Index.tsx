@@ -31,7 +31,7 @@ const Index = () => {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          By continuing, you agree to our <u className="underline-offset-4 hover:text-primary cursor-pointer">Terms and Privacy Policy</u>.
+          <u className="underline-offset-4 hover:text-primary cursor-pointer">Continue as a guest for now</u>.
         </p>
       </div>
     </div>

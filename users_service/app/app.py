@@ -38,7 +38,7 @@ def get_users():
         
     
 
-@app.route('/health')
+@app.route('/health', methods=['GET'])
 def health():
     return "<h1>SERVICE USERS is healthy!</h1>", 200
 
