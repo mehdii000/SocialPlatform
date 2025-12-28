@@ -7,7 +7,8 @@ from flask_limiter.util import get_remote_address
 
 from database_utils import (
     is_username_taken, 
-    is_email_taken, 
+    is_email_taken,
+    does_password_match,
     db_create_signup, 
     db_get_signups, 
     db_init
@@ -27,8 +28,6 @@ limiter = Limiter(
 @limiter.limit("10 per hour")
 def signup():
     data = request.get_json()
-    
-    # Validation: Ensure data exists
     if not data:
         return jsonify({"error": "Request body must be JSON"}), 400
     
@@ -73,6 +72,31 @@ def signup():
             "message": "User created successfully"
         }), 201
 
+    except Exception as e:
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+
+@app.route('/login', methods=['POST'])
+@limiter.limit("10 per minute")
+def login():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    
+    email = data.get('email')
+    password = data.get('password')
+    if not all([email, password]):
+        return jsonify({"error": "Missing email or password"}), 400    
+
+    # Validation: Check if email exists then check hashed password.
+    try:
+        if not is_email_taken(email):
+            return jsonify({"error": "Email not registered"}), 401
+
+        if not does_password_match(email, password, bcrypt):
+            return jsonify({"error": "Invalid credentials"}), 401
+
+        return jsonify({"message": "Login successful"}), 200
+        
     except Exception as e:
         return jsonify({"error": "Database error", "details": str(e)}), 500
 

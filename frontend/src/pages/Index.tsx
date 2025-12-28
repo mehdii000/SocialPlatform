@@ -12,7 +12,9 @@ const Index = () => {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-foreground">Welcome</h1>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Meteor
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {authMode === "login"
               ? "Sign in to your account"

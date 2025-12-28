@@ -44,6 +44,19 @@ def is_email_taken(email):
     finally:
         connection.close()
 
+def does_password_match(email, password, bcrypt):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT hashed_password FROM signup WHERE email = %s", (email,))
+            result = cursor.fetchone()
+            if result is None:
+                return False
+            stored_hashed_password = result[0]
+        return bcrypt.check_password_hash(stored_hashed_password, password)
+    finally:
+        connection.close()
+
 def db_create_signup(username, email, hashed_password):
     connection = get_db_connection()
     try:
