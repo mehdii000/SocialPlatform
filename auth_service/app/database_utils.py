@@ -1,7 +1,6 @@
 import psycopg2
 
 def get_db_connection():
-    # Recommended: Use environment variables instead of hardcoding credentials
     return psycopg2.connect(
         host='db',
         database='auth_db',
@@ -15,7 +14,7 @@ def db_init():
         with connection.cursor() as cursor:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS signup (
-                    id SERIAL PRIMARY KEY,
+                    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
                     username VARCHAR(30) UNIQUE NOT NULL,
                     email VARCHAR(70) UNIQUE NOT NULL,
                     hashed_password VARCHAR(255) NOT NULL
@@ -29,7 +28,6 @@ def is_username_taken(name):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            # Fixed: (name,) is a tuple, (name) is just a string in parentheses
             cursor.execute("SELECT COUNT(*) FROM signup WHERE username = %s", (name,))
             count = cursor.fetchone()[0]
         return int(count) > 0
@@ -54,7 +52,7 @@ def db_create_signup(username, email, hashed_password):
                 "INSERT INTO signup (username, email, hashed_password) VALUES (%s, %s, %s)",
                 (username, email, hashed_password)
             )
-        connection.commit() # CRITICAL: Changes must be committed
+        connection.commit()
     finally:
         connection.close()
 
@@ -70,8 +68,8 @@ def db_get_signups():
             user_list.append({
                 "id": user[0],
                 "username": user[1],
-                "email": user[2],
-                "hashed_password": user[3]
+                "email": user[2]
+                #"hashed_password": user[3]
             })
         return user_list
     finally:

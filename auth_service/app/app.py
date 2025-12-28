@@ -5,7 +5,6 @@ from flask_limiter import Limiter
 from flask_bcrypt import Bcrypt
 from flask_limiter.util import get_remote_address
 
-# Import database functions from your database_utils.py file
 from database_utils import (
     is_username_taken, 
     is_email_taken, 
@@ -15,16 +14,13 @@ from database_utils import (
 )
 
 app = Flask(__name__)
-
-# Initialize Bcrypt for password hashing
 bcrypt = Bcrypt(app)
 
 # Initialize the rate limiter
-# This helps prevent brute-force attacks on your signup endpoint
 limiter = Limiter(
     key_func=get_remote_address,
     app=app,
-    storage_uri="memory://",  # Switch to "redis://redis:6379" for production/multi-worker setups
+    storage_uri="memory://",
 )
 
 @app.route('/signup', methods=['POST'])
@@ -44,7 +40,7 @@ def signup():
     if not all([username, email, password]):
         return jsonify({"error": "Missing username, email, or password"}), 400
     
-    # Business Logic: Check if user already exists
+    # Validation: Check if user already exists
     try:
         if is_username_taken(username):
             return jsonify({"error": "Username already taken"}), 400
@@ -52,12 +48,26 @@ def signup():
         if is_email_taken(email):
             return jsonify({"error": "Email already taken"}), 400
 
+        # Send request /createuser to users-service (pretty self explanatory i think)
+        # Note that if /createuser fails this should early exist to not alter auth_db
+        users_service_url = 'http://users-service:5000/createuser'
+        response = requests.post(users_service_url, json={
+                "username": username, 
+                "email": email
+        })
+
+        if (response.status_code != 201):
+            return jsonify({
+                "error": "Failed to create user in users-service",
+                "details": response.json()
+            }), 500
+
         # Securely hash the password before storing
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-        # Save to database
+        # Save to auth_db
         db_create_signup(username, email, hashed_password)
-        
+
         print(f"Created user: {username}, {email}")
         return jsonify({
             "message": "User created successfully"
@@ -88,7 +98,6 @@ def health():
             return "<h1>AUTH SERVICE is healthy but USERS SERVICE is unstable!</h1>", 503
             
     except requests.exceptions.RequestException as e:
-        # This triggers if the users-service is unreachable (DNS fail, connection refused, etc.)
         return (
             f"<h1>AUTH SERVICE is healthy but USERS SERVICE is unreachable!</h1>"
             f"<p>Error: {str(e)}</p>"
@@ -97,14 +106,10 @@ def health():
 @app.errorhandler(429)
 def ratelimit_handler(e):
     return jsonify({
-        "error": "ratelimit exceeded (AMINE RB)", 
+        "error": "ratelimit exceeded.", 
         "message": str(e.description)
     }), 429
 
 if __name__ == '__main__':
-    # Initialize the database table on startup
     db_init()
-    
-    # Run the Flask app
-    # host='0.0.0.0' is required for the app to be accessible inside a Docker container
     app.run(debug=True, host='0.0.0.0', port=5000)
