@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthInput from "./AuthInput";
 import AuthButton from "./AuthButton";
-import GuestButton from "./GuestButton";
 import { toast } from "@/hooks/use-toast";
+import { storeTokens, validateToken } from "@/lib/auth";
 
 const LoginForm = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,10 +52,25 @@ const LoginForm = () => {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
-        });
+        // Store tokens
+        storeTokens(data.jwt_token, data.refresh_token);
+        
+        // Validate token
+        const isValid = await validateToken();
+        
+        if (isValid) {
+          toast({
+            title: "Success",
+            description: "Logged in successfully",
+          });
+          navigate("/main");
+        } else {
+          toast({
+            title: "Error",
+            description: "Token validation failed",
+            variant: "destructive",
+          });
+        }
       }
     } catch {
       toast({

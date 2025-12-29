@@ -1,9 +1,11 @@
 import os
 import requests
+from datetime import timedelta
 from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_bcrypt import Bcrypt
 from flask_limiter.util import get_remote_address
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 
 from database_utils import (
     is_username_taken, 
@@ -16,6 +18,12 @@ from database_utils import (
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
+
+app.config["JWT_SECRET_KEY"] = "b2eea992-b48b-4013-b39b-dae141ba63f3"
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=60)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+
+jwt = JWTManager(app)
 
 # Initialize the rate limiter
 limiter = Limiter(
@@ -95,10 +103,30 @@ def login():
         if not does_password_match(email, password, bcrypt):
             return jsonify({"error": "Invalid credentials"}), 401
 
-        return jsonify({"message": "Login successful"}), 200
+        # Everything after this: Login matches
+        jwt_token = create_access_token(identity=email)
+        refresh_token = create_refresh_token(identity=email)
+
+        return jsonify(jwt_token=jwt_token, refresh_token=refresh_token), 200
         
     except Exception as e:
         return jsonify({"error": "Database error", "details": str(e)}), 500
+
+@app.route('/refresh', methods=["POST"])
+@jwt_required(refresh=True) # This decorator specifically requires a REFRESH token
+def refresh():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify(access_token=access_token)
+
+@app.route('/validate', methods=['POST'])
+@jwt_required()
+def validate():
+    if request.is_json:
+        identity = get_jwt_identity()
+        return jsonify(logged_in_as=identity), 200
+    else:
+        return jsonify({"error": "Request must be JSON"}), 400
 
 @app.route('/getusers', methods=['GET'])
 def get_users():
