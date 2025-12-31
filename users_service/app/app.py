@@ -1,6 +1,8 @@
 import os
 import psycopg2
 from flask import Flask, request, jsonify
+from flask_jwt_extended import JWTManager
+from routes.profiles import profile_bp
 
 from database_utils import (
     db_init,
@@ -9,6 +11,11 @@ from database_utils import (
 )
 
 app = Flask(__name__)
+
+app.config["JWT_SECRET_KEY"] = "b2eea992-b48b-4013-b39b-dae141ba63f3"
+jwt = JWTManager(app)
+
+app.register_blueprint(profile_bp, url_prefix='/profiles')
 
 @app.route('/createuser', methods=['POST'])
 def create_user():

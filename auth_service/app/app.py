@@ -103,7 +103,7 @@ def login():
         if not does_password_match(email, password, bcrypt):
             return jsonify({"error": "Invalid credentials"}), 401
 
-        # Everything after this: Login matches
+        # Here i create the jwt after i ensured that password and email match and exist
         jwt_token = create_access_token(identity=email)
         refresh_token = create_refresh_token(identity=email)
 

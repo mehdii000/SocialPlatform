@@ -5,7 +5,8 @@ import {
   Home, 
   Search, 
   Compass, 
-  MessageCircle, 
+  MessageCircle,
+  Bell,
   Settings, 
   User, 
   LogOut 
@@ -16,6 +17,7 @@ const navItems = [
   { icon: Search, label: "Search" },
   { icon: Compass, label: "Explore" },
   { icon: MessageCircle, label: "Messages" },
+  { icon: Bell, label: "Notifications" },
   { icon: User, label: "Profile" },
   { icon: Settings, label: "Settings" },
 ];
