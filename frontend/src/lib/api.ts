@@ -1,4 +1,5 @@
 import { getTokens } from "./auth";
+import { authenticatedFetch } from "./auth";
 
 const API_BASE = "http://localhost/api";
 
@@ -15,7 +16,7 @@ export interface UserProfile {
 export const fetchProfile = async (): Promise<UserProfile> => {
   const { jwtToken } = getTokens();
   
-  const response = await fetch(`${API_BASE}/profiles/get`, {
+  const response = await authenticatedFetch(`${API_BASE}/profiles/get`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -33,7 +34,7 @@ export const fetchProfile = async (): Promise<UserProfile> => {
 export const updateProfile = async (data: Partial<UserProfile>): Promise<UserProfile> => {
   const { jwtToken } = getTokens();
   
-  const response = await fetch(`${API_BASE}/profiles/update`, {
+  const response = await authenticatedFetch(`${API_BASE}/profiles/update`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

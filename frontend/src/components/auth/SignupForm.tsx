@@ -2,6 +2,7 @@ import { useState } from "react";
 import AuthInput from "./AuthInput";
 import AuthButton from "./AuthButton";
 import { toast } from "@/hooks/use-toast";
+import { authenticatedFetch } from "@/lib/auth";
 
 const SignupForm = () => {
   const [username, setUsername] = useState("");
@@ -43,7 +44,7 @@ const SignupForm = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch("http://localhost/api/auth/signup", {
+      const response = await authenticatedFetch("http://localhost/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),

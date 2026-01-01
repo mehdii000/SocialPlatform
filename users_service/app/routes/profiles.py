@@ -18,6 +18,7 @@ def profile():
 
 # /getpublic GET endpoint that takes a ?username param to get public info on a profile
 @profile_bp.route('/getpublic', methods=['GET'])
+#@jwt_required()
 def get_public_profile():
     username = request.args.get('username')
     if not username:
