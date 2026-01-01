@@ -43,7 +43,7 @@ const SignupForm = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch("http://localhost/auth/signup", {
+      const response = await fetch("http://localhost/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),

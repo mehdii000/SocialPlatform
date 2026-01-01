@@ -82,3 +82,20 @@ def db_get_user_by_email(email):
         return None
     finally:
         connection.close()
+
+def db_get_public_user_by_username(username):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT username, bio, profile_picture_url FROM users WHERE username = %s", (username,))
+            user = cursor.fetchone()
+        
+        if user:
+            return {
+                "username": user[0],
+                "bio": user[1],
+                "profile_picture_url": user[2]
+            }
+        return None
+    finally:
+        connection.close()

@@ -1,6 +1,6 @@
 import { getTokens } from "./auth";
 
-const API_BASE = "http://localhost";
+const API_BASE = "http://localhost/api";
 
 export interface UserProfile {
   id: number;

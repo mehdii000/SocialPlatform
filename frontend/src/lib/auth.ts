@@ -18,7 +18,7 @@ export const validateToken = async (): Promise<boolean> => {
   if (!jwtToken) return false;
 
   try {
-    const response = await fetch("http://localhost/auth/validate", {
+    const response = await fetch("http://localhost/api/auth/validate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
