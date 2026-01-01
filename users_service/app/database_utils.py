@@ -62,11 +62,11 @@ def db_get_users():
     finally:
         connection.close()
 
-def db_get_user_by_id(id):
+def db_get_user_by_email(email):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT id, username, email, bio, profile_picture_url, account_status, created_at FROM users WHERE id = %s", (id,))
+            cursor.execute("SELECT id, username, email, bio, profile_picture_url, account_status, created_at FROM users WHERE email = %s", (email,))
             user = cursor.fetchone()
         
         if user:
