@@ -45,7 +45,7 @@ const Main = () => {
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-64 border-r border-border bg-card p-6">
-        <h1 className="mb-8 text-xl font-semibold text-foreground">App</h1>
+        <img src="../../res/logo.png" alt="Meteor Logo" className="mx-auto mb-8 h-10 w-auto mr-auto" />
         
         <nav className="space-y-1">
           {navItems.map((item) => (
