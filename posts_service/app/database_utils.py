@@ -3,7 +3,7 @@ import psycopg2
 def get_db_connection():
     return psycopg2.connect(
         host='db',
-        database='posts_db',
+        database='social_db',
         user='user',
         password='mehdi'
     )
@@ -73,6 +73,41 @@ def db_init():
                     CREATE INDEX IF NOT EXISTS idx_posts_created_at
                     ON posts(created_at DESC);
                 """)
+
+                # Create likes table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS likes (
+                        id BIGSERIAL PRIMARY KEY,
+
+                        post_id BIGINT REFERENCES posts(id) ON DELETE CASCADE,
+                        user_id BIGINT NOT NULL,
+
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+
+                        UNIQUE (post_id, user_id)
+                    );
+                """)
+
+                # Create comments table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS comments (
+                        id BIGSERIAL PRIMARY KEY,
+
+                        post_id BIGINT REFERENCES posts(id) ON DELETE CASCADE,
+                        user_id BIGINT NOT NULL,
+
+                        content TEXT NOT NULL,
+
+                        created_at TIMESTAMP WITH TIME ZONE
+                            DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE
+                            DEFAULT CURRENT_TIMESTAMP,
+
+                        is_deleted BOOLEAN DEFAULT FALSE
+                    );
+                """)
+
+        connection.commit()
 
     finally:
         connection.close()

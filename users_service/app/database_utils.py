@@ -3,7 +3,7 @@ import psycopg2
 def get_db_connection():
     return psycopg2.connect(
         host='db',
-        database='users_db',
+        database='social_db',
         user='user',
         password='mehdi'
     )

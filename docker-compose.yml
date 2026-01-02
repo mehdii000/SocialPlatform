@@ -48,7 +48,7 @@ services:
       args:
         - SERVICE_DIR=users_service
     environment:
-      - DATABASE_URL=postgresql://user:mehdi@db:5432/users_db
+      - DATABASE_URL=postgresql://user:mehdi@db:5432/social_db
     volumes:
       - ./users_service/app:/app
     depends_on:
@@ -70,7 +70,7 @@ services:
       args:
         - SERVICE_DIR=posts_service
     environment:
-      - DATABASE_URL=postgresql://user:mehdi@db:5432/posts_db
+      - DATABASE_URL=postgresql://user:mehdi@db:5432/social_db
     volumes:
       - ./posts_service/app:/app
     depends_on:
