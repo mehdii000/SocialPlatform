@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:15
+    restart: always
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: mehdi
@@ -62,6 +63,28 @@ services:
     networks:
       - app-network
 
+  posts-service:
+    build:
+      context: .
+      dockerfile: GenericPyService.Dockerfile
+      args:
+        - SERVICE_DIR=posts_service
+    environment:
+      - DATABASE_URL=postgresql://user:mehdi@db:5432/posts_db
+    volumes:
+      - ./posts_service/app:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+    #   interval: 30s
+    #   timeout: 3s
+    #   retries: 3
+    #   start_period: 1s
+    networks:
+      - app-network
+
   # Removed healthcheck from Frontend/Gateway as they are "leaf" services
   frontend:
     build: ./frontend
@@ -85,6 +108,8 @@ services:
       auth-service:
         condition: service_started
       users-service:
+        condition: service_started
+      posts-service:
         condition: service_started
       frontend:
         condition: service_started

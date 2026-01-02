@@ -11,22 +11,29 @@ def get_db_connection():
 def db_init():
     connection = get_db_connection()
     try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-                    
-                    username VARCHAR(30) UNIQUE NOT NULL,
-                    email VARCHAR(70) UNIQUE NOT NULL,
-                    
-                    bio TEXT DEFAULT 'Placeholde bio, probably change me later.',
-                    profile_picture_url TEXT,
-                    account_status VARCHAR(20) DEFAULT 'new',
-                    
-                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-        connection.commit() # Save changes
+        with connection:
+            with connection.cursor() as cursor:
+                # Enable citext extension (safe & idempotent)
+                cursor.execute("""
+                    CREATE EXTENSION IF NOT EXISTS citext;
+                """)
+
+                # Create users table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+
+                        username VARCHAR(30) UNIQUE NOT NULL,
+                        email CITEXT UNIQUE NOT NULL,
+
+                        bio TEXT DEFAULT 'Placeholder bio, probably change me later.',
+                        profile_picture_url TEXT,
+                        account_status VARCHAR(20) DEFAULT 'new',
+
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    );
+                """)
+
     finally:
         connection.close()
 

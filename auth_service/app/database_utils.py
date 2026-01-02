@@ -11,18 +11,27 @@ def get_db_connection():
 def db_init():
     connection = get_db_connection()
     try:
-        with connection.cursor() as cursor:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS signup (
-                    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-                    username VARCHAR(30) UNIQUE NOT NULL,
-                    email VARCHAR(70) UNIQUE NOT NULL,
-                    hashed_password VARCHAR(255) NOT NULL
-                )
-            """)
-        connection.commit() # Save changes
+        with connection:
+            with connection.cursor() as cursor:
+                # Enable citext (safe to call multiple times)
+                cursor.execute("""
+                    CREATE EXTENSION IF NOT EXISTS citext;
+                """)
+
+                # Create signup table
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS signup (
+                        id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+
+                        username VARCHAR(30) UNIQUE NOT NULL,
+                        email CITEXT UNIQUE NOT NULL,
+
+                        hashed_password VARCHAR(255) NOT NULL
+                    );
+                """)
     finally:
         connection.close()
+
 
 def is_username_taken(name):
     connection = get_db_connection()
