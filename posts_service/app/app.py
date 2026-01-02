@@ -1,7 +1,7 @@
 import os
 import psycopg2
 from flask import Flask, request, jsonify
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt
 
 from database_utils import (
     db_init
@@ -16,6 +16,18 @@ jwt = JWTManager(app)
 @app.route('/public/health', methods=['GET'])
 def health():
     return "<h1>SERVICE POSTS is healthy!</h1>", 200
+
+##################################### PUBLIC ###################################################
+
+@app.route('/public/createpost', methods=['POST'])
+@jwt_required()
+def createPost():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Request body must be JSON"}), 400
+    
+
+################################################################################################
 
 if __name__ == '__main__':
     db_init()
