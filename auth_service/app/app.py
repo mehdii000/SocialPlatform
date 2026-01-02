@@ -128,17 +128,9 @@ def validate():
     else:
         return jsonify({"error": "Request must be JSON"}), 400
 
-@app.route('/public/getsignups', methods=['GET'])
-def get_users():
-    try:
-        users = db_get_signups()
-        return jsonify({"users": users}), 200
-    except Exception as e:
-        return jsonify({"error": "Could not retrieve users", "details": str(e)}), 500
-
 @app.route('/public/health', methods=['GET'])
 def health():
-    users_service_url = 'http://users-service:5000/health'
+    users_service_url = 'http://users-service:5000/public/health'
     
     try:
         # We use a short timeout so the app doesn't hang if the other service is down
