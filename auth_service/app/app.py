@@ -32,7 +32,7 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-@app.route('/signup', methods=['POST'])
+@app.route('/public/signup', methods=['POST'])
 @limiter.limit("10 per hour")
 def signup():
     data = request.get_json()
@@ -57,7 +57,7 @@ def signup():
 
         # Send request /createuser to users-service (pretty self explanatory i think)
         # Note that if /createuser fails this should early exist to not alter auth_db
-        users_service_url = 'http://users-service:5000/createuser'
+        users_service_url = 'http://users-service:5000/internal/createuser'
         response = requests.post(users_service_url, json={
                 "username": username, 
                 "email": email
@@ -83,7 +83,7 @@ def signup():
     except Exception as e:
         return jsonify({"error": "Database error", "details": str(e)}), 500
 
-@app.route('/login', methods=['POST'])
+@app.route('/public/login', methods=['POST'])
 @limiter.limit("10 per minute")
 def login():
     data = request.get_json()
@@ -112,14 +112,14 @@ def login():
     except Exception as e:
         return jsonify({"error": "Database error", "details": str(e)}), 500
 
-@app.route('/refresh', methods=["POST"])
+@app.route('/public/refresh', methods=["POST"])
 @jwt_required(refresh=True) # This decorator specifically requires a REFRESH token
 def refresh():
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity)
     return jsonify(access_token=access_token)
 
-@app.route('/validate', methods=['POST'])
+@app.route('/public/validate', methods=['POST'])
 @jwt_required()
 def validate():
     if request.is_json:
@@ -128,7 +128,7 @@ def validate():
     else:
         return jsonify({"error": "Request must be JSON"}), 400
 
-@app.route('/getusers', methods=['GET'])
+@app.route('/public/getsignups', methods=['GET'])
 def get_users():
     try:
         users = db_get_signups()
@@ -136,7 +136,7 @@ def get_users():
     except Exception as e:
         return jsonify({"error": "Could not retrieve users", "details": str(e)}), 500
 
-@app.route('/health', methods=['GET'])
+@app.route('/public/health', methods=['GET'])
 def health():
     users_service_url = 'http://users-service:5000/health'
     

@@ -20,7 +20,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPublicProfile = async () => {
       try {
-        const response = await fetch(`http://localhost/api/profiles/getpublic?username=${username}`, {
+        const response = await fetch(`http://localhost/api/users/profiles/getpublic?username=${username}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });

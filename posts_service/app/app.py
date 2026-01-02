@@ -13,7 +13,7 @@ app.config["JWT_SECRET_KEY"] = "b2eea992-b48b-4013-b39b-dae141ba63f3"
 jwt = JWTManager(app)
 
 
-@app.route('/health', methods=['GET'])
+@app.route('/public/health', methods=['GET'])
 def health():
     return "<h1>SERVICE POSTS is healthy!</h1>", 200
 

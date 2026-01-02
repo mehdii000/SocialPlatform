@@ -15,9 +15,9 @@ app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "b2eea992-b48b-4013-b39b-dae141ba63f3"
 jwt = JWTManager(app)
 
-app.register_blueprint(profile_bp, url_prefix='/profiles')
+app.register_blueprint(profile_bp, url_prefix='/public/profiles')
 
-@app.route('/createuser', methods=['POST'])
+@app.route('/internal/createuser', methods=['POST'])
 def create_user():
     data = request.get_json()
     if not data:
@@ -35,7 +35,7 @@ def create_user():
     except Exception as e:
         return jsonify({"error": "Could not create user", "details": str(e)}), 500
 
-@app.route('/getusers', methods=['GET'])
+@app.route('/public/getusers', methods=['GET'])
 def get_users():
     try:
         users = db_get_users()
@@ -45,7 +45,7 @@ def get_users():
         
     
 
-@app.route('/health', methods=['GET'])
+@app.route('/public/health', methods=['GET'])
 def health():
     return "<h1>SERVICE USERS is healthy!</h1>", 200
 
