@@ -198,6 +198,97 @@ def like_post():
         return jsonify({"error": "Failed to process like/unlike"}), 500
     finally:
         release_db_connection(conn)
+
+@app.route('/public/get/<int:post_id>', methods=['GET']) # Changed to GET and added post_id
+@jwt_required()
+def get_single_post(post_id):
+    # Get the current user's ID from the JWT to check "is_liked" status
+    claims = get_jwt()
+    current_user_id = claims.get('id')
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Using parameterized queries (%s) to prevent SQL Injection
+            cur.execute("""
+                SELECT 
+                    p.id, 
+                    p.user_id, 
+                    u.username,
+                    p.content, 
+                    p.media_url, 
+                    p.media_type, 
+                    p.likes_count, 
+                    p.comments_count, 
+                    p.created_at,
+                    EXISTS (
+                        SELECT 1 FROM likes l 
+                        WHERE l.post_id = p.id AND l.user_id = %s
+                    ) as is_liked
+                FROM posts p
+                INNER JOIN users u ON p.user_id = u.id
+                WHERE p.id = %s AND p.is_deleted = FALSE;
+            """, (current_user_id, post_id)) # Order matters: current_user_id for EXISTS, post_id for WHERE
+            
+            row = cur.fetchone()
+            
+            if not row:
+                return jsonify({"error": "Post not found"}), 404
+
+            post_data = {
+                "id": row[0],
+                "user_id": row[1],
+                "username": row[2],
+                "content": row[3],
+                "media_url": f"http://localhost/api/media/{row[4]}" if row[4] else None,
+                "media_type": row[5],
+                "likes_count": row[6],
+                "comments_count": row[7],
+                "created_at": row[8].isoformat() if hasattr(row[8], 'isoformat') else row[8],
+                "is_liked": row[9]
+            }
+            
+        return jsonify(post_data), 200
+    except Exception as e:
+        app.logger.error(f"Fetch Error: {str(e)}")
+        return jsonify({"error": "Could not retrieve post"}), 500
+    finally:
+        release_db_connection(conn)
+
+@app.route('/public/delete', methods=['POST'])
+@jwt_required()
+def deletePost():
+    user_id = get_jwt().get('id')
+    post_id = request.json.get('post_id')
+
+    # check if doesnt exist or its not a number
+    if not post_id or not isinstance(post_id, int):
+        return jsonify({"error": "Post ID is required"}), 400
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # First, check if the post exists and belongs to the user
+            cur.execute("""
+                SELECT id FROM posts WHERE id = %s AND user_id = %s AND is_deleted = FALSE;
+            """, (post_id, user_id))
+            post_to_delete = cur.fetchone()
+
+            if not post_to_delete:
+                return jsonify({"error": "Post not found or you don't have permission to delete it"}), 403
+
+            # Mark the post as deleted
+            cur.execute("""
+                UPDATE posts SET is_deleted = TRUE WHERE id = %s;
+            """, (post_id,))
+            conn.commit()
+        return jsonify({"message": "Post deleted successfully"}), 200
+    except Exception as e:
+        conn.rollback()
+        app.logger.error(f"Delete Post Error: {str(e)}")
+        return jsonify({"error": "Failed to delete post"}), 500
+    finally:
+        release_db_connection(conn)
         
 
 # --- Entry Point ---

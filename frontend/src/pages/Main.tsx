@@ -98,7 +98,7 @@ const Main = () => {
                 <p className="text-muted-foreground">No posts yet. Be the first to share something!</p>
               </div>
             ) : (
-              posts.map((post) => <PostCard key={post.id} post={post} />)
+              posts.map((post) => <PostCard key={post.id} post={post} onDeleted={loadPosts} />)
             )}
           </div>
         </div>

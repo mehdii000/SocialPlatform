@@ -127,3 +127,38 @@ export const likePost = async (postId: number): Promise<{ message: string; likes
 
   return response.json();
 };
+
+export const deletePost = async (postId: number): Promise<{ message: string }> => {
+  const { jwtToken } = getTokens();
+  const response = await authenticatedFetch(`http://localhost/api/posts/delete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({ post_id: postId }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete post");
+  }
+
+  return response.json();
+};
+
+export const fetchPost = async (postId: number): Promise<Post> => {
+  const { jwtToken } = getTokens();
+  const response = await authenticatedFetch(`http://localhost/api/posts/get/${postId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch post");
+  }
+
+  return response.json();
+};

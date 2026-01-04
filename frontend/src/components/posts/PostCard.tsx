@@ -1,9 +1,17 @@
-import { Heart, MessageSquare, Share2, MoreHorizontal } from "lucide-react";
+import { Heart, MessageSquare, Share2, MoreHorizontal, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { likePost } from "@/lib/api";
+import { likePost, deletePost } from "@/lib/api";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Post {
   id: number;
@@ -18,22 +26,50 @@ export interface Post {
   is_liked: boolean;
 }
 
-const PostCard = ({ post }: { post: Post }) => {
+interface PostCardProps {
+  post: Post;
+  onDeleted?: () => void;
+}
+
+const PostCard = ({ post, onDeleted }: PostCardProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const timeAgo = formatDistanceToNow(new Date(post.created_at), { addSuffix: true });
   const [liked, setLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes_count);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleLike = () => {
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const newState = !liked;
     setLiked(newState);
     setLikesCount(prev => (newState ? prev + 1 : prev - 1));
     likePost(post.id);
   };
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDeleting(true);
+    try {
+      await deletePost(post.id);
+      toast({ title: "Post deleted successfully" });
+      onDeleted?.();
+    } catch (error) {
+      toast({ title: "Failed to delete post", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCardClick = () => {
+    navigate(`/posts/${post.id}`);
+  };
+
   return (
     <motion.article 
       layout
-      className="group relative overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
+      onClick={handleCardClick}
+      className="group relative cursor-pointer overflow-hidden rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
     >
       <div className="mb-4 flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -45,9 +81,26 @@ const PostCard = ({ post }: { post: Post }) => {
             <p className="text-xs text-muted-foreground">{timeAgo}</p>
           </div>
         </div>
-        <button className="rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-secondary group-hover:opacity-100">
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button 
+              className="rounded-full p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-secondary group-hover:opacity-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem 
+              className="text-destructive focus:text-destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              {isDeleting ? "Deleting..." : "Delete"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {post.content && (
@@ -64,7 +117,7 @@ const PostCard = ({ post }: { post: Post }) => {
         </div>
       )}
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-6" onClick={(e) => e.stopPropagation()}>
         <button 
           className={cn(
             "group/like relative flex items-center gap-2 transition-colors",
