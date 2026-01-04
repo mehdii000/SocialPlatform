@@ -12,7 +12,8 @@ from database_utils import (
     is_email_taken,
     does_password_match,
     db_create_signup, 
-    db_get_signups, 
+    db_get_signups,
+    db_get_id_from_email,
     db_init
 )
 
@@ -104,7 +105,10 @@ def login():
             return jsonify({"error": "Invalid credentials"}), 401
 
         # Here i create the jwt after i ensured that password and email match and exist
-        jwt_token = create_access_token(identity=email)
+        # also put the user id in the jwt
+        jwt_token = create_access_token(identity=email, additional_claims={
+            "id": db_get_id_from_email(email)
+        })
         refresh_token = create_refresh_token(identity=email)
 
         return jsonify(jwt_token=jwt_token, refresh_token=refresh_token), 200
@@ -115,8 +119,10 @@ def login():
 @app.route('/public/refresh', methods=["POST"])
 @jwt_required(refresh=True) # This decorator specifically requires a REFRESH token
 def refresh():
-    identity = get_jwt_identity()
-    access_token = create_access_token(identity=identity)
+    email = get_jwt_identity()
+    access_token = create_access_token(identity=email, additional_claims={
+        "id": db_get_id_from_email(email)
+    })
     return jsonify(access_token=access_token)
 
 @app.route('/public/validate', methods=['POST'])

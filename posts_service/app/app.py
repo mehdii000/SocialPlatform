@@ -1,34 +1,226 @@
 import os
 import psycopg2
+from psycopg2 import pool
 from flask import Flask, request, jsonify
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt
+from datetime import datetime
 
-from database_utils import (
-    db_init
-)
+# Import local utilities
+from database_utils import db_init
+from minio_utils import upload_media
 
 app = Flask(__name__)
 
-app.config["JWT_SECRET_KEY"] = "b2eea992-b48b-4013-b39b-dae141ba63f3"
+# --- Configuration ---
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "b2eea992-b48b-4013-b39b-dae141ba63f3")
 jwt = JWTManager(app)
 
+# --- Database Connection Pool ---
+# We initialize the pool globally to reuse connections across requests
+try:
+    db_pool = pool.SimpleConnectionPool(
+        1, 20,
+        host=os.getenv("DB_HOST", "db"),
+        database=os.getenv("DB_NAME", "social_db"),
+        user=os.getenv("DB_USER", "user"),
+        password=os.getenv("DB_PASSWORD", "mehdi")
+    )
+    print("Database connection pool created successfully")
+except Exception as e:
+    print(f"Error creating database connection pool: {e}")
+
+# --- Helper: Get DB Connection ---
+def get_db_connection():
+    return db_pool.getconn()
+
+def release_db_connection(conn):
+    db_pool.putconn(conn)
+
+# --- Routes ---
 
 @app.route('/public/health', methods=['GET'])
 def health():
-    return "<h1>SERVICE POSTS is healthy!</h1>", 200
-
-##################################### PUBLIC ###################################################
+    return jsonify({"service": "posts-service", "status": "healthy"}), 200
 
 @app.route('/public/createpost', methods=['POST'])
 @jwt_required()
-def createPost():
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Request body must be JSON"}), 400
+def create_post():
+    # 1. Extract Data
+    text_content = request.form.get('text', '').strip()
+    image_file = request.files.get('image')
+    video_file = request.files.get('video')
+
+    # 2. Validation
+    if not any([text_content, image_file, video_file]):
+        return jsonify({"error": "Post cannot be empty"}), 400
     
+    if image_file and video_file:
+        return jsonify({"error": "Post can only contain one image OR one video"}), 400
 
-################################################################################################
+    # 3. Auth Data
+    claims = get_jwt()
+    user_id = claims.get('id')
 
+    # 4. Media Processing
+    media_url = None
+    media_type = 0 # 0: Text, 1: Image, 2: Video
+
+    try:
+        if image_file:
+            media_url = upload_media(image_file)
+            media_type = 1
+        elif video_file:
+            media_url = upload_media(video_file)
+            media_type = 2
+    except Exception as e:
+        app.logger.error(f"Media Upload Fail: {str(e)}")
+        return jsonify({"error": "File upload failed"}), 500
+
+    # 5. Database Insertion
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO posts (user_id, content, media_url, media_type)
+                VALUES (%s, %s, %s, %s) RETURNING id;
+                """,
+                (user_id, text_content, media_url, media_type)
+            )
+            post_id = cur.fetchone()[0]
+            conn.commit()
+        return jsonify({"message": "Post created", "post_id": post_id}), 201
+    except Exception as e:
+        conn.rollback()
+        app.logger.error(f"DB Error: {str(e)}")
+        return jsonify({"error": "Database saving failed"}), 500
+    finally:
+        release_db_connection(conn)
+
+@app.route('/public/getposts', methods=['GET'])
+@jwt_required()
+def get_posts():
+    # Get the current user's ID from the JWT
+    claims = get_jwt()
+    current_user_id = claims.get('id')
+    
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT 
+                    p.id, 
+                    p.user_id, 
+                    u.username,
+                    p.content, 
+                    p.media_url, 
+                    p.media_type, 
+                    p.likes_count, 
+                    p.comments_count, 
+                    p.created_at,
+                    -- Check if a like exists for the current user
+                    EXISTS (
+                        SELECT 1 FROM likes l 
+                        WHERE l.post_id = p.id AND l.user_id = %s
+                    ) as is_liked
+                FROM posts p
+                INNER JOIN users u ON p.user_id = u.id
+                WHERE p.is_deleted = FALSE 
+                ORDER BY p.created_at DESC;
+            """, (current_user_id,)) # Pass the user_id to the query
+            
+            rows = cur.fetchall()
+            
+            posts_list = []
+            for row in rows:
+                posts_list.append({
+                    "id": row[0],
+                    "user_id": row[1],
+                    "username": row[2],
+                    "content": row[3],
+                    # Fixed row index for media_url (row[4])
+                    "media_url": f"http://localhost/api/media/{row[4]}" if row[4] else None,
+                    "media_type": row[5],
+                    "likes_count": row[6],
+                    "comments_count": row[7],
+                    "created_at": row[8].isoformat() if hasattr(row[8], 'isoformat') else row[8],
+                    "is_liked": row[9] # This is now the boolean result from the EXISTS clause
+                })
+        return jsonify(posts_list), 200
+    except Exception as e:
+        app.logger.error(f"Fetch Error: {str(e)}")
+        return jsonify({"error": "Could not retrieve posts"}), 500
+    finally:
+        release_db_connection(conn)
+
+@app.route('/public/like', methods=['POST'])
+@jwt_required()
+def like_post():
+    user_id = get_jwt().get('id')
+    print(user_id)
+    post_id = request.json.get('post_id')
+
+    if not post_id:
+        return jsonify({"error": "Post ID is required"}), 400
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Check if the user has already liked the post
+            cur.execute("""
+                SELECT id FROM likes WHERE user_id = %s AND post_id = %s;
+            """, (user_id, post_id))
+            existing_like = cur.fetchone()
+
+            if existing_like:
+                # User already liked, so unlike the post
+                cur.execute("""
+                    DELETE FROM likes WHERE user_id = %s AND post_id = %s;
+                """, (user_id, post_id))
+                cur.execute("""
+                    UPDATE posts SET likes_count = likes_count - 1 WHERE id = %s AND likes_count > 0;
+                """, (post_id,))
+                conn.commit()
+                return jsonify({"message": "Post unliked successfully"}), 200
+            else:
+                # User has not liked, so like the post
+                cur.execute("""
+                    INSERT INTO likes (user_id, post_id) VALUES (%s, %s);
+                """, (user_id, post_id))
+                cur.execute("""
+                    UPDATE posts SET likes_count = likes_count + 1 WHERE id = %s;
+                """, (post_id,))
+                conn.commit()
+                return jsonify({"message": "Post liked successfully"}), 201
+    except Exception as e:
+        conn.rollback()
+        app.logger.error(f"Like/Unlike Error: {str(e)}")
+        return jsonify({"error": "Failed to process like/unlike"}), 500
+    finally:
+        release_db_connection(conn)
+        
+
+# --- Entry Point ---
 if __name__ == '__main__':
-    db_init()
+    # Initialize the tables using a single connection from the pool
+    conn = None
+    try:
+        conn = db_pool.getconn()
+        db_init(conn) # Pass the connection here
+        db_pool.putconn(conn)
+    except Exception as e:
+        if conn:
+            db_pool.putconn(conn)
+        print("Could not initialize DB, exiting...")
+        exit(1)
+
+    # Ensure MinIO bucket is public
+    from minio_utils import ensure_bucket_public, BUCKET_NAME
+    try:
+        ensure_bucket_public(BUCKET_NAME)
+        print(f"MinIO bucket '{BUCKET_NAME}' ensured to be public.")
+    except Exception as e:
+        print(f"Error ensuring MinIO bucket public: {e}")
+        
+
     app.run(debug=True, host='0.0.0.0', port=5000)

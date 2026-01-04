@@ -78,6 +78,18 @@ def db_create_signup(username, email, hashed_password):
     finally:
         connection.close()
 
+def db_get_id_from_email(email):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT id FROM signup WHERE email = %s", (email,))
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            return None
+    finally:
+        connection.close()
+
 def db_get_signups():
     connection = get_db_connection()
     try:

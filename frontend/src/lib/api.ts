@@ -11,6 +11,19 @@ export interface UserProfile {
   created_at: string;
 }
 
+export interface Post {
+  id: number;
+  user_id: number;
+  username: string;
+  content: string;
+  media_url: string | null;
+  media_type: number | 0;
+  likes_count: number;
+  comments_count: number;
+  created_at: string;
+  is_liked: boolean | false;
+}
+
 export const fetchProfile = async (): Promise<UserProfile> => {
   const { jwtToken } = getTokens();
   
@@ -43,6 +56,73 @@ export const updateProfile = async (data: Partial<UserProfile>): Promise<UserPro
 
   if (!response.ok) {
     throw new Error("Failed to update profile");
+  }
+
+  return response.json();
+};
+
+export const fetchPosts = async (): Promise<Post[]> => {
+  const { jwtToken } = getTokens();
+  
+  const response = await authenticatedFetch("http://localhost/api/posts/getposts", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch posts");
+  }
+
+  return response.json();
+};
+
+export const createPost = async (
+  text: string,
+  mediaFile: File | null,
+  mediaType: "image" | "video" | null
+): Promise<{ message: string; post_id: number }> => {
+  const { jwtToken } = getTokens();
+  
+  const formData = new FormData();
+  formData.append("text", text);
+  
+  if (mediaFile && mediaType === "image") {
+    formData.append("image", mediaFile);
+  } else if (mediaFile && mediaType === "video") {
+    formData.append("video", mediaFile);
+  }
+  
+  const response = await authenticatedFetch("http://localhost/api/posts/createpost", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create post");
+  }
+
+  return response.json();
+};
+
+export const likePost = async (postId: number): Promise<{ message: string; likes_count: number }> => {
+  const { jwtToken } = getTokens();
+  const response = await authenticatedFetch(`http://localhost/api/posts/like`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: JSON.stringify({ post_id: postId }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to like post");
   }
 
   return response.json();
