@@ -1,9 +1,11 @@
 import { useState, useRef } from "react";
-import { Image, Video, X, Loader2 } from "lucide-react";
+import { Image, Video, X, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { createPost } from "@/lib/api";
+import { compressMedia } from "@/lib/compression";
 import { useToast } from "@/hooks/use-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface CreatePostProps {
   onPostCreated: () => void;
@@ -15,15 +17,36 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleFileSelect = (file: File, type: "image" | "video") => {
-    setMediaFile(file);
-    setMediaType(type);
-    const url = URL.createObjectURL(file);
-    setMediaPreview(url);
+  const handleFileSelect = async (file: File, type: "image" | "video") => {
+    setIsCompressing(true);
+    try {
+      const compressedFile = await compressMedia(file, type);
+      const compressionRatio = ((1 - compressedFile.size / file.size) * 100).toFixed(0);
+      
+      setMediaFile(compressedFile);
+      setMediaType(type);
+      const url = URL.createObjectURL(compressedFile);
+      setMediaPreview(url);
+
+      if (compressedFile.size < file.size) {
+        toast({
+          title: "Media compressed",
+          description: `Reduced by ${compressionRatio}%`,
+        });
+      }
+    } catch (error) {
+      setMediaFile(file);
+      setMediaType(type);
+      const url = URL.createObjectURL(file);
+      setMediaPreview(url);
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const clearMedia = () => {
@@ -67,43 +90,73 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <div className="flex gap-4">
-        <div className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-primary/60 to-accent" />
-        <div className="flex-1 space-y-4">
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative flex flex-col overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-card/80 p-5 shadow-xl shadow-black/5"
+    >
+      {/* Decorative accent */}
+      <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-accent/5 blur-3xl" />
+      
+      <div className="relative flex gap-4">
+        {/* User Avatar Placeholder */}
+        <div className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-accent/80 to-primary/40 ring-2 ring-accent/20 ring-offset-2 ring-offset-card" />
+        
+        <div className="flex flex-1 flex-col min-w-0">
           <Textarea
             placeholder="What's on your mind?"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[80px] resize-none border-0 bg-transparent p-0 text-sm placeholder:text-muted-foreground focus-visible:ring-0"
+            className="min-h-[60px] w-full resize-none border-0 bg-transparent p-0 text-sm placeholder:text-muted-foreground/60 focus-visible:ring-0"
           />
 
-          {mediaPreview && (
-            <div className="relative">
-              <button
-                onClick={clearMedia}
-                className="absolute right-2 top-2 z-10 rounded-full bg-background/80 p-1.5 backdrop-blur-sm transition-colors hover:bg-background"
+          {/* Media Preview Section */}
+            {isCompressing && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="my-2 flex items-center gap-2 rounded-lg bg-accent/10 px-3 py-2 text-sm text-accent"
               >
-                <X className="h-4 w-4" />
-              </button>
-              {mediaType === "image" ? (
-                <img
-                  src={mediaPreview}
-                  alt="Preview"
-                  className="max-h-64 w-full rounded-xl object-cover"
-                />
-              ) : (
-                <video
-                  src={mediaPreview}
-                  controls
-                  className="max-h-64 w-full rounded-xl"
-                />
-              )}
-            </div>
-          )}
+                <Sparkles className="h-4 w-4 animate-pulse" />
+                Compressing media...
+              </motion.div>
+            )}
 
-          <div className="flex items-center justify-between border-t border-border pt-4">
-            <div className="flex gap-2">
+            {mediaPreview && !isCompressing && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="relative my-3 w-full overflow-hidden rounded-xl border border-border shadow-sm"
+              >
+                <button
+                  type="button"
+                  onClick={clearMedia}
+                  className="absolute right-2 top-2 z-20 rounded-full bg-black/60 p-1.5 text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-black/80"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                
+                {mediaType === "image" ? (
+                  <img
+                    src={mediaPreview}
+                    alt="Preview"
+                    className="max-h-[300px] w-full object-cover"
+                  />
+                ) : (
+                  <video
+                    src={mediaPreview}
+                    controls
+                    className="max-h-[300px] w-full bg-black object-contain"
+                  />
+                )}
+              </motion.div>
+            )}
+
+          {/* Action Footer */}
+          <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-4">
+            <div className="flex gap-1">
               <input
                 type="file"
                 ref={imageInputRef}
@@ -128,8 +181,8 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => imageInputRef.current?.click()}
-                disabled={isLoading}
-                className="text-muted-foreground hover:text-primary"
+                disabled={isLoading || isCompressing}
+                className="rounded-xl text-muted-foreground transition-all hover:bg-accent/10 hover:text-accent"
               >
                 <Image className="h-5 w-5" />
               </Button>
@@ -137,8 +190,8 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={() => videoInputRef.current?.click()}
-                disabled={isLoading}
-                className="text-muted-foreground hover:text-primary"
+                disabled={isLoading || isCompressing}
+                className="rounded-xl text-muted-foreground transition-all hover:bg-accent/10 hover:text-accent"
               >
                 <Video className="h-5 w-5" />
               </Button>
@@ -146,8 +199,8 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
             <Button
               onClick={handleSubmit}
-              disabled={isLoading || (!content.trim() && !mediaFile)}
-              className="rounded-full px-6"
+              disabled={isLoading || isCompressing || (!content.trim() && !mediaFile)}
+              className="rounded-full bg-gradient-to-r from-accent to-accent/80 px-6 font-medium shadow-lg shadow-accent/20 transition-all hover:shadow-xl hover:shadow-accent/30"
             >
               {isLoading ? (
                 <>
@@ -161,7 +214,7 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
