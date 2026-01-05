@@ -13,6 +13,7 @@ app = Flask(__name__)
 
 # --- Configuration ---
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "b2eea992-b48b-4013-b39b-dae141ba63f3")
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB limit
 jwt = JWTManager(app)
 
 # --- Database Connection Pool ---
