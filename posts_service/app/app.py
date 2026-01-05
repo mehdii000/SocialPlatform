@@ -291,10 +291,13 @@ def deletePost():
         release_db_connection(conn)
         
 @app.route('/public/getposts/<int:user_id>', methods=['GET'])
-@jwt_required()
+@jwt_required(optional=True)
 def get_posts_by_user(user_id):
+    # If no token is provided, get_jwt() returns an empty dict
     claims = get_jwt()
-    current_user_id = claims.get('id')
+    
+    # Use .get() with a default value of -1 if 'id' is missing or claims is empty
+    current_user_id = claims.get('id', -1)
     
     conn = get_db_connection()
     try:
@@ -310,7 +313,7 @@ def get_posts_by_user(user_id):
                     p.likes_count, 
                     p.comments_count, 
                     p.created_at,
-                    -- Check if a like exists for the current user
+                    -- If current_user_id is -1, is_liked will naturally be False
                     EXISTS (
                         SELECT 1 FROM likes l 
                         WHERE l.post_id = p.id AND l.user_id = %s
@@ -320,7 +323,7 @@ def get_posts_by_user(user_id):
                 WHERE p.is_deleted = FALSE
                 AND p.user_id = %s
                 ORDER BY p.created_at DESC;
-            """, (current_user_id, user_id,)) # Pass the user_id to the query
+            """, (current_user_id, user_id,))
             
             rows = cur.fetchall()
             
@@ -331,13 +334,12 @@ def get_posts_by_user(user_id):
                     "user_id": row[1],
                     "username": row[2],
                     "content": row[3],
-                    # Fixed row index for media_url (row[4])
                     "media_url": f"http://localhost/api/media/{row[4]}" if row[4] else None,
                     "media_type": row[5],
                     "likes_count": row[6],
                     "comments_count": row[7],
                     "created_at": row[8].isoformat() if hasattr(row[8], 'isoformat') else row[8],
-                    "is_liked": row[9] # This is now the boolean result from the EXISTS clause
+                    "is_liked": row[9]
                 })
         return jsonify(posts_list), 200
     except Exception as e:

@@ -94,14 +94,15 @@ def db_get_public_user_by_username(username):
     connection = get_db_connection()
     try:
         with connection.cursor() as cursor:
-            cursor.execute("SELECT username, bio, profile_picture_url FROM users WHERE username = %s", (username,))
+            cursor.execute("SELECT id, username, bio, profile_picture_url FROM users WHERE username = %s", (username,))
             user = cursor.fetchone()
         
         if user:
             return {
-                "username": user[0],
-                "bio": user[1],
-                "profile_picture_url": user[2]
+                "id": user[0],
+                "username": user[1],
+                "bio": user[2],
+                "profile_picture_url": user[3]
             }
         return None
     finally:

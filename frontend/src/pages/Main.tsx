@@ -15,6 +15,7 @@ import Header from "@/components/layout/Header";
 import ProfileModal from "@/components/profile/ProfileModal";
 import CreatePost from "@/components/posts/CreatePost";
 import PostCard from "@/components/posts/PostCard";
+import FlavorsSection from "@/components/flavors/FlavorsSection";
 
 const navItems = [
   { icon: Home, label: "Home", active: true },
@@ -55,7 +56,7 @@ const Main = () => {
       {/* Sidebar */}
       <aside className="fixed left-0 top-0 h-full w-64 border-r border-border bg-card/50 backdrop-blur-sm">
         <div className="flex h-16 items-center gap-3 border-b border-border px-6">
-          <img src="/res/logo.png" alt="Meteor Logo" className="h-8 w-8" />
+          <img src="/logo/logo.png" alt="Meteor Logo" className="h-8 w-8" />
           <h2 className="text-xl font-bold text-foreground">Meteor</h2>
         </div>
         
@@ -81,25 +82,35 @@ const Main = () => {
 
       {/* Main Content */}
       <main className="ml-64 flex-1 pt-16">
-        <div className="mx-auto max-w-2xl p-6">
-          {/* Create Post */}
-          <div className="mb-6">
-            <CreatePost onPostCreated={loadPosts} />
-          </div>
+        <div className="mx-auto max-w-6xl px-6 py-6">
+          <div className="flex gap-6">
+            {/* Posts Section */}
+            <div className="flex-1 max-w-2xl">
+              {/* Create Post */}
+              <div className="mb-6">
+                <CreatePost onPostCreated={loadPosts} />
+              </div>
 
-          {/* Posts */}
-          <div className="space-y-4">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              {/* Posts */}
+              <div className="space-y-4">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : posts.length === 0 ? (
+                  <div className="rounded-2xl border border-border bg-card p-8 text-center">
+                    <p className="text-muted-foreground">No posts yet. Be the first to share something!</p>
+                  </div>
+                ) : (
+                  posts.map((post) => <PostCard key={post.id} post={post} onDeleted={loadPosts} />)
+                )}
               </div>
-            ) : posts.length === 0 ? (
-              <div className="rounded-2xl border border-border bg-card p-8 text-center">
-                <p className="text-muted-foreground">No posts yet. Be the first to share something!</p>
-              </div>
-            ) : (
-              posts.map((post) => <PostCard key={post.id} post={post} onDeleted={loadPosts} />)
-            )}
+            </div>
+
+            {/* Flavors Section - Right Sidebar */}
+            <aside className="w-64 hidden lg:block">
+              <FlavorsSection />
+            </aside>
           </div>
         </div>
       </main>

@@ -79,6 +79,24 @@ export const fetchPosts = async (): Promise<Post[]> => {
   return response.json();
 };
 
+export const fetchUserPosts = async (userId: number): Promise<Post[]> => {
+  const { jwtToken } = getTokens();
+  
+  const response = await authenticatedFetch(`http://localhost/api/posts/getposts/${userId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${jwtToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch user posts");
+  }
+
+  return response.json();
+};
+
 export const createPost = async (
   text: string,
   mediaFile: File | null,

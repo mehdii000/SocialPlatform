@@ -29,7 +29,7 @@ const Index = () => {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <img src="../../res/logo.png" alt="App Logo" className="mx-auto h-32 w-32" />
+          <img src="/logo/logo.png" alt="App Logo" className="mx-auto h-32 w-32" />
           
           <p className="mt-2 text-sm text-muted-foreground">
             {authMode === "login"
