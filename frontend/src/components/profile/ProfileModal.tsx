@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
-import { X, User, Calendar, Mail, Edit3, Save, Loader2 } from "lucide-react";
-import { fetchProfile, updateProfile, UserProfile } from "@/lib/api";
+import { useState, useEffect, useRef } from "react";
+import { X, User, Calendar, Mail, Edit3, Save, Loader2, Camera } from "lucide-react";
+import { fetchProfile, updateProfile, changeProfilePicture, UserProfile } from "@/lib/api";
+import { compressImage } from "@/lib/compression";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -13,6 +15,9 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editBio, setEditBio] = useState("");
+  const [uploadingPicture, setUploadingPicture] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -38,6 +43,35 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
       console.error("Failed to save:", error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPicture(true);
+    try {
+      // Compress the image before uploading
+      const compressedFile = await compressImage(file);
+      const updated = await changeProfilePicture(compressedFile);
+      setProfile(updated);
+      toast({
+        title: "Profile picture updated",
+        description: "Your new profile picture has been saved.",
+      });
+    } catch (error) {
+      console.error("Failed to change profile picture:", error);
+      toast({
+        title: "Failed to update",
+        description: "Could not change your profile picture. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingPicture(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -67,9 +101,20 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
             </button>
           </div>
 
-          {/* Avatar */}
+          {/* Avatar with upload capability */}
           <div className="relative px-6">
-            <div className="-mt-12 h-24 w-24 rounded-full border-4 border-card bg-gradient-to-br from-primary/60 to-accent overflow-hidden">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleProfilePictureChange}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPicture}
+              className="group -mt-12 relative h-24 w-24 rounded-full border-4 border-card bg-gradient-to-br from-primary/60 to-accent overflow-hidden transition-transform hover:scale-105 disabled:opacity-70"
+            >
               {profile?.profile_picture_url ? (
                 <img src={profile.profile_picture_url} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -77,7 +122,15 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                   <User className="h-10 w-10 text-primary-foreground" />
                 </div>
               )}
-            </div>
+              {/* Overlay on hover */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                {uploadingPicture ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                ) : (
+                  <Camera className="h-6 w-6 text-white" />
+                )}
+              </div>
+            </button>
           </div>
 
           {/* Content */}

@@ -164,6 +164,27 @@ export const deletePost = async (postId: number): Promise<{ message: string }> =
   return response.json();
 };
 
+export const changeProfilePicture = async (imageFile: File): Promise<UserProfile> => {
+  const { jwtToken } = getTokens();
+  
+  const formData = new FormData();
+  formData.append("image", imageFile);
+  
+  const response = await authenticatedFetch("http://localhost/api/users/changeprofilepic", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${jwtToken}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to change profile picture");
+  }
+
+  return response.json();
+};
+
 export const fetchPost = async (postId: number): Promise<Post> => {
   const { jwtToken } = getTokens();
   const response = await authenticatedFetch(`http://localhost/api/posts/get/${postId}`, {

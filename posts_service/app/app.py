@@ -140,7 +140,7 @@ def get_posts():
                     "username": row[2],
                     "content": row[3],
                     # Fixed row index for media_url (row[4])
-                    "media_url": f"http://localhost/api/media/{row[4]}" if row[4] else None,
+                    "media_url": f"http://localhost/api/media/posts/{row[4]}" if row[4] else None,
                     "media_type": row[5],
                     "likes_count": row[6],
                     "comments_count": row[7],
@@ -241,7 +241,7 @@ def get_single_post(post_id):
                 "user_id": row[1],
                 "username": row[2],
                 "content": row[3],
-                "media_url": f"http://localhost/api/media/{row[4]}" if row[4] else None,
+                "media_url": f"http://localhost/api/media/posts/{row[4]}" if row[4] else None,
                 "media_type": row[5],
                 "likes_count": row[6],
                 "comments_count": row[7],
@@ -335,7 +335,7 @@ def get_posts_by_user(user_id):
                     "user_id": row[1],
                     "username": row[2],
                     "content": row[3],
-                    "media_url": f"http://localhost/api/media/{row[4]}" if row[4] else None,
+                    "media_url": f"http://localhost/api/media/posts/{row[4]}" if row[4] else None,
                     "media_type": row[5],
                     "likes_count": row[6],
                     "comments_count": row[7],
@@ -370,6 +370,5 @@ if __name__ == '__main__':
         print(f"MinIO bucket '{BUCKET_NAME}' ensured to be public.")
     except Exception as e:
         print(f"Error ensuring MinIO bucket public: {e}")
-        
 
     app.run(debug=True, host='0.0.0.0', port=5000)
