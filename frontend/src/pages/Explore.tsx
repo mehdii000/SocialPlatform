@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthenticated } from "@/lib/auth";
-import { fetchPosts } from "@/lib/api";
+import { fetchPosts, HOST_URL } from "@/lib/api";
 import { Post } from "@/components/posts/PostCard";
 import { 
   Home, 
@@ -250,7 +250,7 @@ const MasonryItem = ({ post, size, onClick, index }: MasonryItemProps) => {
       {isVideo && post.media_url ? (
         <div className="relative h-full w-full">
           <video
-            src={post.media_url}
+            src={`${HOST_URL}/api/media/posts/` + post.media_url}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             muted
             loop
@@ -266,7 +266,7 @@ const MasonryItem = ({ post, size, onClick, index }: MasonryItemProps) => {
         </div>
       ) : post.media_url ? (
         <img
-          src={post.media_url}
+          src={`${HOST_URL}/api/media/posts/` + post.media_url}
           alt=""
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />

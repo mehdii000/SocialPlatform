@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X, User, Calendar, Mail, Edit3, Save, Loader2, Camera } from "lucide-react";
-import { fetchProfile, updateProfile, changeProfilePicture, UserProfile } from "@/lib/api";
+import { fetchProfile, updateProfile, changeProfilePicture, UserProfile, HOST_URL } from "@/lib/api";
 import { compressImage } from "@/lib/compression";
 import { useToast } from "@/hooks/use-toast";
 
@@ -116,7 +116,8 @@ const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
               className="group -mt-12 relative h-24 w-24 rounded-full border-4 border-card bg-gradient-to-br from-primary/60 to-accent overflow-hidden transition-transform hover:scale-105 disabled:opacity-70"
             >
               {profile?.profile_picture_url ? (
-                <img src={profile.profile_picture_url} alt="" className="h-full w-full object-cover" />
+                <img src={`${HOST_URL}/api/media/profiles/` + profile.profile_picture_url}
+                alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <User className="h-10 w-10 text-primary-foreground" />

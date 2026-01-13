@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { isAuthenticated } from "@/lib/auth";
-import { fetchPost, Post } from "@/lib/api";
+import { fetchPost, HOST_URL, Post } from "@/lib/api";
 import { ArrowLeft, Loader2, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { getVideoTimestamp, setVideoTimestamp } from "@/lib/videoTimestamps";
@@ -124,7 +124,7 @@ const PostView = () => {
             <div className="border-t border-border/50 bg-muted/30">
               {post.media_type === 1 ? (
                 <img 
-                  src={post.media_url} 
+                  src={`${HOST_URL}/api/media/posts/` + post.media_url}
                   alt="Post" 
                   className="w-full object-contain max-h-[500px]" 
                 />

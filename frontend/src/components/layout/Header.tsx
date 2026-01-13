@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { User, Settings, LogOut, ChevronDown } from "lucide-react";
-import { fetchProfile, UserProfile } from "@/lib/api";
+import { fetchProfile, HOST_URL, UserProfile } from "@/lib/api";
 import { clearTokens } from "@/lib/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -52,7 +52,8 @@ const Header = ({ onOpenProfile }: HeaderProps) => {
           >
             <div className="relative h-8 w-8 rounded-full bg-gradient-to-br from-accent/60 to-primary/40 overflow-hidden ring-2 ring-accent/20">
               {profile?.profile_picture_url ? (
-                <img src={profile.profile_picture_url} alt="" className="h-full w-full object-cover" />
+                <img src={`${HOST_URL}/api/media/profiles/` + profile.profile_picture_url}
+                alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <User className="h-4 w-4 text-primary-foreground" />

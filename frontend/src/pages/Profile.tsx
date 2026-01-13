@@ -114,7 +114,8 @@ const Profile = () => {
           <div className="h-36 bg-gradient-to-br from-accent/30 via-accent/10 to-primary/5" />
           <div className="absolute -bottom-14 left-6">
             <Avatar className="w-28 h-28 border-4 border-background ring-2 ring-accent/20">
-              <AvatarImage src={profile.profile_picture_url || undefined} />
+              <AvatarImage
+              src={`${HOST_URL}/api/media/profiles/` + profile.profile_picture_url|| undefined} />
               <AvatarFallback className="text-3xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent">
                 {profile.username.charAt(0).toUpperCase()}
               </AvatarFallback>

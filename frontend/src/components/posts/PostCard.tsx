@@ -1,6 +1,6 @@
 import { Heart, MessageSquare, Share2, MoreHorizontal, Trash2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { likePost, deletePost } from "@/lib/api";
+import { likePost, deletePost, HOST_URL } from "@/lib/api";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -139,14 +139,14 @@ const PostCard = ({ post, onDeleted }: PostCardProps) => {
         <div className="mb-4 overflow-hidden rounded-xl bg-muted/50 ring-1 ring-border">
           {post.media_type === 1 ? (
             <img 
-              src={post.media_url} 
+              src={`${HOST_URL}/api/media/posts/` + post.media_url}
               alt="Post" 
               className="w-full object-cover max-h-[400px] transition-transform duration-300 group-hover:scale-[1.02]" 
             />
           ) : (
             <video 
               ref={videoRef}
-              src={post.media_url} 
+              src={`${HOST_URL}/api/media/posts/` + post.media_url}
               controls 
               className="w-full"
               onTimeUpdate={handleVideoTimeUpdate}

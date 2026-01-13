@@ -123,7 +123,7 @@ def db_change_profile_picture(user_id, profile_picture_url):
     try:
         with connection.cursor() as cursor:
             cursor.execute("UPDATE users SET profile_picture_url = %s WHERE id = %s", (
-                f"http://localhost/api/media/profiles/{profile_picture_url}"
+                f"{profile_picture_url}"
                 , user_id
                 ))
         connection.commit()
