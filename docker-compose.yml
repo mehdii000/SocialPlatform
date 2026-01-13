@@ -12,8 +12,8 @@ services:
       - "9000:9000" # Minio Media Port
       - "9001:9001" # Web UI Console Port
     environment:
-      MINIO_ROOT_USER: "minioadmin"
-      MINIO_ROOT_PASSWORD: "minioadminpassword"
+      MINIO_ROOT_USER: ${MINIO_USERNAME}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -49,6 +49,8 @@ services:
         - SERVICE_DIR=auth_service
     environment:
       - DATABASE_URL=postgresql://user:mehdi@db:5432/auth_db
+    env_file:
+      - ./.env
     volumes:
       - ./auth_service/app:/app
     depends_on:
@@ -72,6 +74,8 @@ services:
         - SERVICE_DIR=users_service
     environment:
       - DATABASE_URL=postgresql://user:mehdi@db:5432/social_db
+    env_file:
+      - ./.env
     volumes:
       - ./users_service/app:/app
     depends_on:
@@ -94,6 +98,8 @@ services:
         - SERVICE_DIR=posts_service
     environment:
       - DATABASE_URL=postgresql://user:mehdi@db:5432/social_db
+    env_file:
+      - ./.env
     volumes:
       - ./posts_service/app:/app
     depends_on:
@@ -107,10 +113,14 @@ services:
     #   start_period: 1s
     networks:
       - app-network
-
-  # Removed healthcheck from Frontend/Gateway as they are "leaf" services
+  
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        - VITE_HOST_URL=${HOST_URL}
+    environment:
+      - VITE_HOST_URL=${HOST_URL}
     volumes:
       - ./frontend/src:/app/src
     depends_on:

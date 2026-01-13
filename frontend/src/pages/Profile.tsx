@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageCircle, User, FileText, Loader2, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { fetchUserPosts, Post } from "@/lib/api";
+import { fetchUserPosts, HOST_URL, Post } from "@/lib/api";
 import PostCard from "@/components/posts/PostCard";
 
 interface PublicProfile {
@@ -38,7 +38,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPublicProfile = async () => {
       try {
-        const response = await fetch(`http://localhost/api/users/profiles/getpublic?username=${username}`, {
+        const response = await fetch(`${HOST_URL}/api/users/profiles/getpublic?username=${username}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });

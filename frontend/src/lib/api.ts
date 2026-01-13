@@ -1,6 +1,9 @@
 import { getTokens } from "./auth";
 import { authenticatedFetch } from "./auth";
 
+export const HOST_URL = import.meta.env.VITE_HOST_URL;
+console.log("HOST_URL:", HOST_URL);
+
 export interface UserProfile {
   id: number;
   username: string;
@@ -27,7 +30,7 @@ export interface Post {
 export const fetchProfile = async (): Promise<UserProfile> => {
   const { jwtToken } = getTokens();
   
-  const response = await authenticatedFetch("http://localhost/api/users/profiles/get", {
+  const response = await authenticatedFetch(`${HOST_URL}/api/users/profiles/get`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -45,7 +48,7 @@ export const fetchProfile = async (): Promise<UserProfile> => {
 export const updateProfile = async (data: Partial<UserProfile>): Promise<UserProfile> => {
   const { jwtToken } = getTokens();
   
-  const response = await authenticatedFetch("http://localhost/api/users/profiles/update", {
+  const response = await authenticatedFetch(`${HOST_URL}/api/users/profiles/update`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -64,7 +67,7 @@ export const updateProfile = async (data: Partial<UserProfile>): Promise<UserPro
 export const fetchPosts = async (): Promise<Post[]> => {
   const { jwtToken } = getTokens();
   
-  const response = await authenticatedFetch("http://localhost/api/posts/getposts", {
+  const response = await authenticatedFetch(`${HOST_URL}/api/posts/getposts`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -82,7 +85,7 @@ export const fetchPosts = async (): Promise<Post[]> => {
 export const fetchUserPosts = async (userId: number): Promise<Post[]> => {
   const { jwtToken } = getTokens();
   
-  const response = await authenticatedFetch(`http://localhost/api/posts/getposts/${userId}`, {
+  const response = await authenticatedFetch(`${HOST_URL}/api/posts/getposts/${userId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -113,7 +116,7 @@ export const createPost = async (
     formData.append("video", mediaFile);
   }
   
-  const response = await authenticatedFetch("http://localhost/api/posts/createpost", {
+  const response = await authenticatedFetch(`${HOST_URL}/api/posts/createpost`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${jwtToken}`,
@@ -130,7 +133,7 @@ export const createPost = async (
 
 export const likePost = async (postId: number): Promise<{ message: string; likes_count: number }> => {
   const { jwtToken } = getTokens();
-  const response = await authenticatedFetch(`http://localhost/api/posts/like`, {
+  const response = await authenticatedFetch(`${HOST_URL}/api/posts/like`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -148,7 +151,7 @@ export const likePost = async (postId: number): Promise<{ message: string; likes
 
 export const deletePost = async (postId: number): Promise<{ message: string }> => {
   const { jwtToken } = getTokens();
-  const response = await authenticatedFetch(`http://localhost/api/posts/delete`, {
+  const response = await authenticatedFetch(`${HOST_URL}/api/posts/delete`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -170,7 +173,7 @@ export const changeProfilePicture = async (imageFile: File): Promise<UserProfile
   const formData = new FormData();
   formData.append("image", imageFile);
   
-  const response = await authenticatedFetch("http://localhost/api/users/changeprofilepic", {
+  const response = await authenticatedFetch(`${HOST_URL}/api/users/changeprofilepic`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${jwtToken}`,
@@ -187,7 +190,7 @@ export const changeProfilePicture = async (imageFile: File): Promise<UserProfile
 
 export const fetchPost = async (postId: number): Promise<Post> => {
   const { jwtToken } = getTokens();
-  const response = await authenticatedFetch(`http://localhost/api/posts/get/${postId}`, {
+  const response = await authenticatedFetch(`${HOST_URL}/api/posts/get/${postId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

@@ -20,7 +20,7 @@ from database_utils import (
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
-app.config["JWT_SECRET_KEY"] = "b2eea992-b48b-4013-b39b-dae141ba63f3"
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=60)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 

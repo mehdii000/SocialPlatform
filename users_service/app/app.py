@@ -14,7 +14,7 @@ from database_utils import (
 
 app = Flask(__name__)
 
-app.config["JWT_SECRET_KEY"] = "b2eea992-b48b-4013-b39b-dae141ba63f3"
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 jwt = JWTManager(app)
 
 app.register_blueprint(profile_bp, url_prefix='/public/profiles')

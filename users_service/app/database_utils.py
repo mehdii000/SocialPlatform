@@ -1,11 +1,12 @@
 import psycopg2
+import os
 
 def get_db_connection():
     return psycopg2.connect(
-        host='db',
+        host= os.environ.get("DB_HOST"),
         database='social_db',
-        user='user',
-        password='mehdi'
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD"),
     )
 
 def db_init():

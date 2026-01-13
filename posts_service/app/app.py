@@ -12,7 +12,7 @@ from minio_utils import upload_media
 app = Flask(__name__)
 
 # --- Configuration ---
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "b2eea992-b48b-4013-b39b-dae141ba63f3")
+app.config["JWT_SECRET_KEY"] = os.environ.get("JWT_SECRET_KEY")
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB limit
 jwt = JWTManager(app)
 
@@ -21,10 +21,10 @@ jwt = JWTManager(app)
 try:
     db_pool = pool.SimpleConnectionPool(
         1, 20,
-        host=os.getenv("DB_HOST", "db"),
-        database=os.getenv("DB_NAME", "social_db"),
-        user=os.getenv("DB_USER", "user"),
-        password=os.getenv("DB_PASSWORD", "mehdi")
+        host=os.environ.get("DB_HOST"),
+        database="social_db",
+        user=os.environ.get("DB_USER"),
+        password=os.environ.get("DB_PASSWORD")
     )
     print("Database connection pool created successfully")
 except Exception as e:

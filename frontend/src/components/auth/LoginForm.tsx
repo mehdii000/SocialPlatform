@@ -5,6 +5,7 @@ import AuthButton from "./AuthButton";
 import { toast } from "@/hooks/use-toast";
 import { storeTokens, validateToken } from "@/lib/auth";
 import { authenticatedFetch } from "@/lib/auth";
+import { HOST_URL } from "@/lib/api";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const LoginForm = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch("http://localhost/api/auth/login", {
+      const response = await fetch(`${HOST_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

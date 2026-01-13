@@ -1,3 +1,5 @@
+import { HOST_URL } from "./api";
+
 export const storeTokens = (jwtToken: string, refreshToken: string) => {
   localStorage.setItem("jwt_token", jwtToken);
   localStorage.setItem("refresh_token", refreshToken);
@@ -18,7 +20,7 @@ export const refreshAccessToken = async (): Promise<boolean> => {
   if (!refreshToken) return false;
 
   try {
-    const response = await fetch("http://localhost/api/auth/refresh", {
+    const response = await fetch(`${HOST_URL}/api/auth/refresh`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,7 +44,7 @@ export const validateToken = async (): Promise<boolean> => {
   if (!jwtToken) return false;
 
   try {
-    const response = await authenticatedFetch("http://localhost/api/auth/validate", {
+    const response = await authenticatedFetch(`${HOST_URL}/api/auth/validate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
