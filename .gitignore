@@ -46,9 +46,3 @@ logs/
 # Miscellaneous
 *.tgz
 .eslintcache
-
-# Env
-.env
-.env.development
-.env.test
-.env.production
