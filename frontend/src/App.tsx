@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Main from "./pages/Main";
 import Explore from "./pages/Explore";
+import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import PostView from "./pages/PostView";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/main" element={<Main />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/messages" element={<Messages />} />
           <Route path="/profiles/:username" element={<Profile />} />
           <Route path="/posts/:postId" element={<PostView />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

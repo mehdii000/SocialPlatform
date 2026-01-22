@@ -113,6 +113,24 @@ services:
     #   start_period: 1s
     networks:
       - app-network
+
+  messages-service:
+    build:
+      context: .
+      dockerfile: GenericPyService.Dockerfile
+      args:
+        - SERVICE_DIR=messages_service
+    environment:
+      - DATABASE_URL=postgresql://user:mehdi@db:5432/social_db
+    env_file:
+      - ./.env
+    volumes:
+      - ./messages_service/app:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
   
   frontend:
     build:

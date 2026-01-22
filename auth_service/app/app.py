@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify
 from flask_limiter import Limiter
 from flask_bcrypt import Bcrypt
 from flask_limiter.util import get_remote_address
-from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, create_refresh_token, get_jwt, jwt_required, get_jwt_identity
 
 from database_utils import (
     is_username_taken, 
@@ -128,11 +128,14 @@ def refresh():
 @app.route('/public/validate', methods=['POST'])
 @jwt_required()
 def validate():
-    if request.is_json:
-        identity = get_jwt_identity()
-        return jsonify(logged_in_as=identity), 200
-    else:
-        return jsonify({"error": "Request must be JSON"}), 400
+    # The decorator already verified the JWT in the Authorization header
+    identity = get_jwt_identity()
+    
+    # Optional: If you stored extra claims (like 'id') in the token
+    claims = get_jwt() 
+    user_id = claims.get("id")
+    
+    return jsonify(logged_in_as=identity), 200
 
 @app.route('/public/health', methods=['GET'])
 def health():

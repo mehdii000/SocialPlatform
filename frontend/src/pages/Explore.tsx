@@ -23,7 +23,7 @@ import ProfileModal from "@/components/profile/ProfileModal";
 const navItems = [
   { icon: Home, label: "Home", path: "/main" },
   { icon: Compass, label: "Explore", path: "/explore" },
-  { icon: MessageCircle, label: "Messages", path: null },
+  { icon: MessageCircle, label: "Messages", path: "/messages" },
   { icon: Bell, label: "Notifications", path: null },
   { icon: Settings, label: "Settings", path: null },
 ];

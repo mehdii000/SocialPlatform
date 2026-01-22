@@ -2,6 +2,7 @@ import { getTokens } from "./auth";
 import { authenticatedFetch } from "./auth";
 
 export const HOST_URL = import.meta.env.VITE_HOST_URL;
+
 console.log("HOST_URL:", HOST_URL);
 
 export interface UserProfile {
@@ -41,7 +42,7 @@ export const fetchProfile = async (): Promise<UserProfile> => {
   if (!response.ok) {
     throw new Error("Failed to fetch profile");
   }
-
+  
   return response.json();
 };
 
