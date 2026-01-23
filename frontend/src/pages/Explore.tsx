@@ -76,15 +76,14 @@ const Explore = () => {
       const response = await authenticatedFetch(
         `${HOST_URL}/api/users/search?q=${encodeURIComponent(query)}`,
         {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
         }
       );
       
       if (response.ok) {
         const data = await response.json();
-        setUsers(data);
+        setUsers(data.results);
       }
     } catch (error) {
       console.error("Failed to search users:", error);

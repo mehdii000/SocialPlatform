@@ -132,7 +132,21 @@ const Profile = () => {
             </div>
             <Button 
               className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
-              onClick={() => {/* TODO: Implement messaging */}}
+              onClick={() => {
+
+                // WHEN CLICKING: send the user to /messages and add a new ghost convo with the profile
+                const handleMessageClick = () => {
+                  navigate("/messages", { 
+                    state: { 
+                      newChat: {
+                        username: profile.username,
+                        avatar: profile.profile_picture_url
+                      } 
+                    } 
+                  });
+                };
+                handleMessageClick();
+              }}
             >
               <MessageCircle className="w-4 h-4" />
               Message

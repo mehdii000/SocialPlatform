@@ -97,7 +97,7 @@ const ChatView = ({
         <div className="flex items-center gap-3">
           {conversation.recipientAvatar ? (
             <img
-              src={`${HOST_URL}/api/media/pfps/${conversation.recipientAvatar}`}
+              src={`${HOST_URL}/api/media/profiles/${conversation.recipientAvatar}`}
               alt={conversation.recipientName}
               className="h-10 w-10 rounded-full object-cover ring-2 ring-border/50"
             />

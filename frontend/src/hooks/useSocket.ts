@@ -3,85 +3,72 @@ import { io, Socket } from "socket.io-client";
 import { getTokens } from "@/lib/auth";
 import { HOST_URL } from "@/lib/api";
 
-export interface Message {
+export interface SocketMessage {
   id: string;
   from: string;
+  to: string;
   content: string;
   timestamp: Date;
   isMine: boolean;
 }
 
-export const useSocket = () => {
+interface UseSocketOptions {
+  onNewMessage?: (message: SocketMessage) => void;
+  onConnectionChange?: (connected: boolean) => void;
+}
+
+export const useSocket = (options?: UseSocketOptions) => {
   const socketRef = useRef<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const optionsRef = useRef(options);
+
+  useEffect(() => { optionsRef.current = options; }, [options]);
 
   useEffect(() => {
     const { jwtToken } = getTokens();
-    
     if (!jwtToken) return;
 
-    // Connect to Socket.io server
     socketRef.current = io(HOST_URL, {
-      extraHeaders: {
-        Authorization: `Bearer ${jwtToken}`
-      }
+      extraHeaders: { Authorization: `Bearer ${jwtToken}` },
+      reconnection: true,
     });
 
-    socketRef.current.on("connect", () => {
-      console.log("Socket connected");
-      setIsConnected(true);
-    });
+    socketRef.current.on("connect", () => setIsConnected(true));
+    socketRef.current.on("disconnect", () => setIsConnected(false));
 
-    socketRef.current.on("disconnect", () => {
-      console.log("Socket disconnected");
-      setIsConnected(false);
-    });
-
-    // Receiving a global message
-    socketRef.current.on("new_msg", (data: { from: string; msg: string }) => {
-      console.log("New global message: " + data.msg);
-      
-      const newMessage: Message = {
-        id: `${Date.now()}-${Math.random()}`,
+    // Handle Incoming Message
+    socketRef.current.on("new_msg", (data: { from: string; to: string; msg: string; timestamp: string }) => {
+      const newMessage: SocketMessage = {
+        id: `msg-${Date.now()}`,
         from: data.from,
+        to: data.to,
         content: data.msg,
-        timestamp: new Date(),
+        timestamp: new Date(data.timestamp), // Use database timestamp
         isMine: false
       };
-      
-      setMessages(prev => [...prev, newMessage]);
+      optionsRef.current?.onNewMessage?.(newMessage);
     });
 
-    return () => {
-      socketRef.current?.disconnect();
+    return () => { socketRef.current?.disconnect(); };
+  }, []);
+
+  const sendMessage = useCallback((recipientId: string, message: string): SocketMessage | null => {
+    if (!socketRef.current?.connected) return null;
+
+    socketRef.current.emit("private_message", {
+      to: recipientId,
+      message: message.trim()
+    });
+
+    return {
+      id: `sent-${Date.now()}`,
+      from: "You",
+      to: recipientId,
+      content: message.trim(),
+      timestamp: new Date(),
+      isMine: true
     };
   }, []);
 
-  const sendMessage = useCallback((text: string, senderName: string) => {
-    if (socketRef.current && isConnected) {
-      // Emit 'message' event for global broadcast
-      socketRef.current.emit("message", {
-        message: text,
-        sender: senderName
-      });
-      
-      // Add sent message to local state
-      const sentMessage: Message = {
-        id: `${Date.now()}-sent`,
-        from: "You",
-        content: text,
-        timestamp: new Date(),
-        isMine: true
-      };
-      
-      setMessages(prev => [...prev, sentMessage]);
-    }
-  }, [isConnected]);
-
-  return {
-    isConnected,
-    messages,
-    sendMessage
-  };
+  return { isConnected, sendMessage, socket: socketRef.current };
 };

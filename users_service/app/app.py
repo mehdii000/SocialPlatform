@@ -44,6 +44,20 @@ def get_users():
         return jsonify({"users": users}), 200
     except Exception as e:
         return jsonify({"error": "Could not retrieve users", "details": str(e)}), 500
+    
+@app.route('/public/search', methods=['GET'])
+def search_users():
+    query = request.args.get('q')
+    if not query:
+        return jsonify({"error": "Missing search query parameter 'q'"}), 400
+    try:
+        users = db_get_users()
+        # Filter
+        filtered_users = [user for user in users if query.lower() in user['username'].lower()]
+        return jsonify({"results": filtered_users}), 200
+    except Exception as e:
+        return jsonify({"error": "Could not search users", "details": str(e)}), 500
+
         
 
 ###################################################

@@ -55,7 +55,7 @@ const SearchResults = ({ users, posts, isLoading, searchQuery }: SearchResultsPr
               >
                 {user.profile_picture_url ? (
                   <img
-                    src={`${HOST_URL}/api/media/pfps/${user.profile_picture_url}`}
+                    src={`${HOST_URL}/api/media/profiles/${user.profile_picture_url}`}
                     alt={user.username}
                     className="h-10 w-10 rounded-full object-cover ring-2 ring-border/50 group-hover:ring-accent/30 transition-all"
                   />

@@ -85,7 +85,7 @@ const ConversationList = ({
               <div className="relative flex-shrink-0">
                 {conv.recipientAvatar ? (
                   <img
-                    src={`${HOST_URL}/api/media/pfps/${conv.recipientAvatar}`}
+                    src={`${HOST_URL}/api/media/profiles/${conv.recipientAvatar}`}
                     alt={conv.recipientName}
                     className="h-12 w-12 rounded-full object-cover ring-2 ring-border/50"
                   />
