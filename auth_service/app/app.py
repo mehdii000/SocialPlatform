@@ -13,6 +13,7 @@ from database_utils import (
     does_password_match,
     db_create_signup, 
     db_get_signups,
+    db_get_username_from_id,
     db_get_id_from_email,
     db_init
 )
@@ -128,14 +129,10 @@ def refresh():
 @app.route('/public/validate', methods=['POST'])
 @jwt_required()
 def validate():
-    # The decorator already verified the JWT in the Authorization header
-    identity = get_jwt_identity()
-    
-    # Optional: If you stored extra claims (like 'id') in the token
     claims = get_jwt() 
     user_id = claims.get("id")
-    
-    return jsonify(logged_in_as=identity), 200
+    username = db_get_username_from_id(user_id)
+    return jsonify(username=username), 200
 
 @app.route('/public/health', methods=['GET'])
 def health():

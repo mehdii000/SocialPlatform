@@ -1,8 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthenticated } from "@/lib/auth";
-import { fetchPosts, HOST_URL } from "@/lib/api";
-import { Post } from "@/components/posts/PostCard";
+import { fetchPosts, HOST_URL, Post, UserProfile } from "@/lib/api";
+import { getTokens, authenticatedFetch } from "@/lib/auth";
 import { 
   Home, 
   Compass, 
@@ -13,12 +13,15 @@ import {
   Loader2, 
   Play,
   Sparkles,
-  ImageIcon
+  ImageIcon,
+  Users,
+  TrendingUp
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { setVideoTimestamp } from "@/lib/videoTimestamps";
 import Header from "@/components/layout/Header";
 import ProfileModal from "@/components/profile/ProfileModal";
+import SearchResults from "@/components/explore/SearchResults";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/main" },
@@ -33,8 +36,10 @@ const Explore = () => {
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -57,6 +62,45 @@ const Explore = () => {
 
     loadPosts();
   }, [navigate]);
+
+  // Search for users when query changes
+  const searchUsers = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setUsers([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const { jwtToken } = getTokens();
+      const response = await authenticatedFetch(
+        `${HOST_URL}/api/users/search?q=${encodeURIComponent(query)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      }
+    } catch (error) {
+      console.error("Failed to search users:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchUsers(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchUsers]);
 
   const filteredPosts = useMemo(() => {
     if (!searchQuery.trim()) return posts;
@@ -83,6 +127,8 @@ const Explore = () => {
     }
     navigate(`/posts/${post.id}`);
   };
+
+  const isSearchActive = searchQuery.trim().length > 0;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -162,56 +208,86 @@ const Explore = () => {
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground transition-colors group-focus-within:text-accent" />
               <input
                 type="text"
-                placeholder="Search media posts..."
+                placeholder="Search people, posts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm py-4 pl-14 pr-6 text-sm placeholder:text-muted-foreground focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
               />
+              {(isSearching || isLoading) && (
+                <Loader2 className="absolute right-5 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+              )}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
             </div>
+            
+            {/* Search Hints */}
+            {!isSearchActive && (
+              <div className="flex items-center justify-center gap-4 mt-3">
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Users className="h-3.5 w-3.5" />
+                  Find people
+                </span>
+                <span className="text-muted-foreground/30">•</span>
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  Discover posts
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Section Header */}
-          <div className="mb-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
-            <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-              <ImageIcon className="h-3.5 w-3.5" />
-              Media Gallery
-            </span>
-            <div className="h-px flex-1 bg-gradient-to-l from-border to-transparent" />
-          </div>
-
-          {/* Content */}
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-24">
-              <div className="relative">
-                <Loader2 className="h-10 w-10 animate-spin text-accent" />
-                <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full" />
-              </div>
-              <p className="mt-4 text-sm text-muted-foreground">Loading media...</p>
-            </div>
-          ) : filteredPosts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="h-20 w-20 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
-                <ImageIcon className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-lg font-medium text-foreground">No media posts found</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {searchQuery ? "Try a different search term" : "Be the first to share something!"}
-              </p>
-            </div>
+          {/* Search Results or Default Gallery */}
+          {isSearchActive ? (
+            <SearchResults
+              users={users}
+              posts={filteredPosts}
+              isLoading={isSearching}
+              searchQuery={searchQuery}
+            />
           ) : (
-            <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4">
-              {filteredPosts.map((post, index) => (
-                <MasonryItem
-                  key={post.id}
-                  post={post}
-                  size={getItemSize(index)}
-                  onClick={() => handlePostClick(post)}
-                  index={index}
-                />
-              ))}
-            </div>
+            <>
+              {/* Section Header */}
+              <div className="mb-6 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
+                <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                  Trending Media
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-l from-border to-transparent" />
+              </div>
+
+              {/* Content */}
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-24">
+                  <div className="relative">
+                    <Loader2 className="h-10 w-10 animate-spin text-accent" />
+                    <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full" />
+                  </div>
+                  <p className="mt-4 text-sm text-muted-foreground">Loading media...</p>
+                </div>
+              ) : posts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 text-center">
+                  <div className="h-20 w-20 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-lg font-medium text-foreground">No media posts found</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Be the first to share something!
+                  </p>
+                </div>
+              ) : (
+                <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4">
+                  {posts.map((post, index) => (
+                    <MasonryItem
+                      key={post.id}
+                      post={post}
+                      size={getItemSize(index)}
+                      onClick={() => handlePostClick(post)}
+                      index={index}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

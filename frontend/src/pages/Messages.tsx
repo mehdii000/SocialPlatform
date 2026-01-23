@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { isAuthenticated } from "@/lib/auth";
 import { 
@@ -7,16 +7,12 @@ import {
   MessageCircle,
   Bell,
   Settings,
-  Send,
-  Circle,
-  Users
+  Sparkles
 } from "lucide-react";
-import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
 import ProfileModal from "@/components/profile/ProfileModal";
-import { useSocket } from "@/hooks/useSocket";
-import { cn } from "@/lib/utils";
-import { fetchProfile, UserProfile } from "@/lib/api";
+import ConversationList, { Conversation } from "@/components/messages/ConversationList";
+import ChatView, { Message } from "@/components/messages/ChatView";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/main" },
@@ -26,47 +22,119 @@ const navItems = [
   { icon: Settings, label: "Settings", path: null },
 ];
 
+// Demo data for the UI
+const demoConversations: Conversation[] = [
+  {
+    id: "1",
+    recipientId: "user1",
+    recipientName: "Alex Chen",
+    lastMessage: "Hey! Did you see the new update?",
+    lastMessageTime: new Date(Date.now() - 1000 * 60 * 5),
+    unreadCount: 3,
+    isOnline: true,
+  },
+  {
+    id: "2",
+    recipientId: "user2",
+    recipientName: "Sarah Miller",
+    lastMessage: "That sounds great, let's do it!",
+    lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 2),
+    unreadCount: 0,
+    isOnline: true,
+  },
+  {
+    id: "3",
+    recipientId: "user3",
+    recipientName: "Jordan Lee",
+    lastMessage: "Thanks for the help yesterday 🙏",
+    lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 24),
+    unreadCount: 1,
+    isOnline: false,
+  },
+  {
+    id: "4",
+    recipientId: "user4",
+    recipientName: "Emma Wilson",
+    lastMessage: "See you at the event!",
+    lastMessageTime: new Date(Date.now() - 1000 * 60 * 60 * 48),
+    unreadCount: 0,
+    isOnline: false,
+  },
+];
+
+const demoMessages: Record<string, Message[]> = {
+  "1": [
+    { id: "m1", content: "Hey there!", timestamp: new Date(Date.now() - 1000 * 60 * 60), isMine: false },
+    { id: "m2", content: "Hi Alex! How are you?", timestamp: new Date(Date.now() - 1000 * 60 * 55), isMine: true },
+    { id: "m3", content: "I'm doing great! Working on some cool stuff", timestamp: new Date(Date.now() - 1000 * 60 * 50), isMine: false },
+    { id: "m4", content: "That's awesome! What are you building?", timestamp: new Date(Date.now() - 1000 * 60 * 45), isMine: true },
+    { id: "m5", content: "Hey! Did you see the new update?", timestamp: new Date(Date.now() - 1000 * 60 * 5), isMine: false },
+  ],
+  "2": [
+    { id: "m1", content: "Want to grab coffee tomorrow?", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), isMine: true },
+    { id: "m2", content: "That sounds great, let's do it!", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), isMine: false },
+  ],
+  "3": [
+    { id: "m1", content: "Thanks for the help yesterday 🙏", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), isMine: false },
+  ],
+  "4": [
+    { id: "m1", content: "Are you coming to the event?", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 50), isMine: true },
+    { id: "m2", content: "See you at the event!", timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), isMine: false },
+  ],
+};
+
 const Messages = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>(demoConversations);
   
-  const { isConnected, messages, sendMessage } = useSocket();
+  // Simulated connection status (will be replaced with real WebSocket)
+  const isConnected = true;
 
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate("/");
     }
-    fetchProfile()
-      .then(setProfile)
-      .catch(console.error);
   }, [navigate]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (selectedConversation) {
+      setMessages(demoMessages[selectedConversation.id] || []);
+      // Mark as read
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === selectedConversation.id ? { ...conv, unreadCount: 0 } : conv
+        )
+      );
+    }
+  }, [selectedConversation]);
 
   const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
-    sendMessage(
-      messageInput.trim(),
-      profile.username
-    );
-    setMessageInput("");
-  };
+    if (!messageInput.trim() || !selectedConversation) return;
 
-  const formatTime = (date?: Date) => {
-    if (!date) return "";
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    
-    if (diff < 1000 * 60) return "Just now";
-    if (diff < 1000 * 60 * 60) return `${Math.floor(diff / (1000 * 60))}m ago`;
-    if (diff < 1000 * 60 * 60 * 24) return `${Math.floor(diff / (1000 * 60 * 60))}h ago`;
-    return date.toLocaleDateString();
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      content: messageInput.trim(),
+      timestamp: new Date(),
+      isMine: true,
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setMessageInput("");
+
+    // Update conversation's last message
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === selectedConversation.id
+          ? { ...conv, lastMessage: newMessage.content, lastMessageTime: newMessage.timestamp }
+          : conv
+      )
+    );
   };
 
   return (
@@ -122,12 +190,12 @@ const Messages = () => {
           })}
         </nav>
 
-        {/* Connection Status */}
+        {/* Bottom Decoration */}
         <div className="absolute bottom-6 left-6 right-6">
           <div className="rounded-xl border border-border/50 bg-secondary/30 p-4">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Circle className={cn("h-2 w-2 fill-current", isConnected ? "text-green-500" : "text-red-500")} />
-              <span>{isConnected ? "Connected" : "Connecting..."}</span>
+              <Sparkles className="h-4 w-4 text-accent" />
+              <span>Meteor v1.0</span>
             </div>
           </div>
         </div>
@@ -138,91 +206,27 @@ const Messages = () => {
 
       {/* Main Content */}
       <main className="relative ml-64 flex-1 pt-16">
-        <div className="flex h-[calc(100vh-4rem)] flex-col">
-          {/* Chat Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border/50 bg-card/30 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent to-accent/60 flex items-center justify-center">
-                <Users className="h-5 w-5 text-accent-foreground" />
-              </div>
-              <div>
-                <h3 className="font-medium text-foreground">Global Chat</h3>
-                <p className="text-xs text-muted-foreground">Everyone can see these messages</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Circle className={cn("h-2 w-2 fill-current", isConnected ? "text-green-500" : "text-red-500")} />
-              <span>{isConnected ? "Live" : "Connecting..."}</span>
-            </div>
+        <div className="flex h-[calc(100vh-4rem)]">
+          {/* Conversation List */}
+          <div className="w-80 flex-shrink-0">
+            <ConversationList
+              conversations={conversations}
+              selectedId={selectedConversation?.id ?? null}
+              onSelect={setSelectedConversation}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="h-20 w-20 rounded-full bg-secondary/50 flex items-center justify-center mb-4">
-                  <MessageCircle className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <p className="text-foreground font-medium">No messages yet</p>
-                <p className="text-sm text-muted-foreground">Be the first to say something!</p>
-              </div>
-            ) : (
-              messages.map((msg, index) => (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.02 }}
-                  className={cn("flex", msg.isMine ? "justify-end" : "justify-start")}
-                >
-                  <div
-                    className={cn(
-                      "max-w-[70%] rounded-2xl px-4 py-2.5",
-                      msg.isMine
-                        ? "bg-gradient-to-r from-accent to-accent/80 text-accent-foreground rounded-br-md"
-                        : "bg-secondary/80 text-foreground rounded-bl-md"
-                    )}
-                  >
-                    {!msg.isMine && (
-                      <p className="text-xs font-medium text-muted-foreground mb-1">{msg.from}</p>
-                    )}
-                    <p className="text-sm">{msg.content}</p>
-                    <p className={cn(
-                      "text-[10px] mt-1",
-                      msg.isMine ? "text-accent-foreground/70" : "text-muted-foreground"
-                    )}>
-                      {formatTime(msg.timestamp)}
-                    </p>
-                  </div>
-                </motion.div>
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Message Input */}
-          <div className="p-4 border-t border-border/50 bg-card/30 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder="Type a message to everyone..."
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                  className="w-full rounded-xl border border-border/50 bg-secondary/50 py-3 px-4 text-sm placeholder:text-muted-foreground focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
-                />
-              </div>
-              <button
-                onClick={handleSendMessage}
-                disabled={!messageInput.trim() || !isConnected}
-                className="p-3 rounded-xl bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-lg shadow-accent/25 hover:shadow-accent/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
+          {/* Chat View */}
+          <ChatView
+            conversation={selectedConversation}
+            messages={messages}
+            messageInput={messageInput}
+            onMessageInputChange={setMessageInput}
+            onSendMessage={handleSendMessage}
+            isConnected={isConnected}
+          />
         </div>
       </main>
 

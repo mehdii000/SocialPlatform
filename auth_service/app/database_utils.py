@@ -91,6 +91,18 @@ def db_get_id_from_email(email):
     finally:
         connection.close()
 
+def db_get_username_from_id(id):
+    connection = get_db_connection()
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT username FROM signup WHERE id = %s", (id,))
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            return None
+    finally:
+        connection.close()
+
 def db_get_signups():
     connection = get_db_connection()
     try:
