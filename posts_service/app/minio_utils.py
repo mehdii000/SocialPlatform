@@ -5,8 +5,8 @@ from werkzeug.utils import secure_filename
 
 minio_client = Minio(
     "minio:9000",
-    access_key= os.environ.get("MINIO_USERNAME"),
-    secret_key= os.environ.get("MINIO_PASSWORD"),
+    access_key= os.environ.get("MINIO_ROOT_USER"),
+    secret_key= os.environ.get("MINIO_ROOT_PASSWORD"),
     secure=False
 )
 
