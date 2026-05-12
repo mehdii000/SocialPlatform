@@ -1,0 +1,123 @@
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { getPublicProfile, fetchProfile, followUser, unfollowUser } from '@/api/users';
+import { fetchUserPosts } from '@/api/posts';
+import { PostCard } from '@/components/features/posts/PostCard';
+import { ProfileHeader } from '@/components/features/users/ProfileHeader';
+import { PostSkeleton } from '@/components/ui/Skeleton';
+import { useAuthStore } from '@/hooks/useAuth';
+import styles from './ProfilePage.module.css';
+
+export default function ProfilePage() {
+  const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const myId = useAuthStore((s) => s.userId);
+  const [tab, setTab] = useState<'posts'>('posts');
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+
+  const { data: myProfile } = useQuery({
+    queryKey: ['myProfile'],
+    queryFn: fetchProfile,
+    enabled: !!myId,
+  });
+
+  const { data: profile, isLoading: profileLoading, isError: profileError } = useQuery({
+    queryKey: ['profile', username],
+    queryFn: () => getPublicProfile(username!),
+    enabled: !!username,
+  });
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ['userPosts', profile?.user_id],
+    queryFn: ({ pageParam }) => fetchUserPosts(profile!.user_id, pageParam as string | undefined),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+    enabled: !!profile?.user_id,
+  });
+
+  const isOwn = myProfile?.user_id === profile?.user_id;
+  const [isFollowing, setIsFollowing] = useState(false);
+  const posts = data?.pages.flatMap((p) => p.data) ?? [];
+
+  const handleFollow = async () => {
+    if (!profile) return;
+    setIsFollowLoading(true);
+    setIsFollowing(true);
+    try {
+      await followUser(profile.user_id);
+    } catch {
+      setIsFollowing(false);
+    }
+    setIsFollowLoading(false);
+  };
+
+  const handleUnfollow = async () => {
+    if (!profile) return;
+    setIsFollowLoading(true);
+    setIsFollowing(false);
+    try {
+      await unfollowUser(profile.user_id);
+    } catch {
+      setIsFollowing(true);
+    }
+    setIsFollowLoading(false);
+  };
+
+  const handleMessage = () => {
+    navigate('/messages', { state: { newChatUsername: profile?.username } });
+  };
+
+  if (profileLoading) {
+    return <div className={styles.center}><div className={styles.loader} /></div>;
+  }
+
+  if (profileError || !profile) {
+    return (
+      <div className={styles.center}>
+        <p className={styles.notFound}>User not found.</p>
+        <button className={styles.backBtn} onClick={() => navigate(-1)}>Go back</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <ProfileHeader
+        profile={profile}
+        followersCount={0}
+        followingCount={0}
+        isFollowing={isFollowing}
+        isOwn={isOwn}
+        onFollow={handleFollow}
+        onUnfollow={handleUnfollow}
+        onMessage={handleMessage}
+      />
+
+      <div className={styles.tabs}>
+        <button
+          className={tab === 'posts' ? styles.tabActive : styles.tab}
+          onClick={() => setTab('posts')}
+        >
+          Posts
+        </button>
+      </div>
+
+      <div className={styles.postList}>
+        {posts.map((post) => (
+          <PostCard key={post.id} post={post} onDelete={() => queryClient.invalidateQueries({ queryKey: ['userPosts'] })} />
+        ))}
+        {posts.length === 0 && !isFetchingNextPage && (
+          <p className={styles.emptyText}>No posts yet.</p>
+        )}
+        {isFetchingNextPage && <PostSkeleton />}
+        {hasNextPage && (
+          <button className={styles.loadMore} onClick={() => fetchNextPage()}>
+            Load more
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

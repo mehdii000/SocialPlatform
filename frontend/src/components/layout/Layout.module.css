@@ -1,0 +1,13 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: var(--space-4);
+  padding-top: calc(56px + var(--space-4));
+}

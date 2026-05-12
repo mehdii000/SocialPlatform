@@ -1,0 +1,112 @@
+.card {
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.displayName {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+.displayName:hover { color: var(--color-accent); }
+
+.time {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.content {
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  margin-bottom: var(--space-3);
+  white-space: pre-wrap;
+}
+
+.mediaWrap {
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-height: 400px;
+}
+
+.media {
+  width: 100%;
+  object-fit: cover;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  transition: color var(--transition-fast);
+}
+.actionBtn:hover { color: var(--color-text); }
+
+.liked {
+  color: var(--color-danger);
+}
+.liked:hover { color: var(--color-danger-hover); }
+
+.menuWrap {
+  position: relative;
+}
+
+.menuBtn {
+  color: var(--color-text-muted);
+  padding: 2px;
+  border-radius: var(--radius-sm);
+}
+.menuBtn:hover { color: var(--color-text); }
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 10;
+  min-width: 120px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-1);
+}
+.dropdown button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  transition: background var(--transition-fast);
+}
+.dropdown button:hover {
+  background: var(--color-danger);
+  color: white;
+}

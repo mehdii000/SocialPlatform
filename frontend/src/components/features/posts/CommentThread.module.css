@@ -1,0 +1,81 @@
+.thread {
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.composer {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  align-items: flex-start;
+}
+
+.input {
+  flex: 1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  resize: none;
+  outline: none;
+}
+.input:focus { border-color: var(--color-accent); }
+.input::placeholder { color: var(--color-text-muted); }
+
+.comment {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: 2px;
+}
+
+.username {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.text {
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.deleteBtn {
+  color: var(--color-text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-fast), color var(--transition-fast);
+  padding: 2px;
+  margin-top: 2px;
+}
+.comment:hover .deleteBtn { opacity: 1; }
+.deleteBtn:hover { color: var(--color-danger); }
+
+.loadMore {
+  display: block;
+  width: 100%;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  padding: var(--space-2);
+  transition: color var(--transition-fast);
+}
+.loadMore:hover { color: var(--color-accent); }

@@ -1,0 +1,68 @@
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+  gap: var(--space-4);
+}
+
+.notFound {
+  color: var(--color-text-secondary);
+}
+
+.backBtn {
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+}
+.backBtn:hover { text-decoration: underline; }
+
+.loader {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+.tab,
+.tabActive {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+.tab:hover { color: var(--color-text); }
+.tabActive { color: var(--color-text); border-bottom-color: var(--color-accent); }
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.emptyText {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-8);
+}
+
+.loadMore {
+  display: block;
+  text-align: center;
+  padding: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  transition: color var(--transition-fast);
+}
+.loadMore:hover { color: var(--color-accent); }

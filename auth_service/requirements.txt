@@ -1,7 +1,0 @@
-flask
-psycopg2
-requests
-flask_bcrypt
-Flask-Limiter
-flask_jwt_extended
-datetime
