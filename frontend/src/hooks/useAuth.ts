@@ -6,8 +6,9 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   userId: string | null;
+  username: string | null;
   initialize: () => Promise<void>;
-  setAuth: (userId: string) => void;
+  setAuth: (userId: string, username: string) => void;
   clearAuth: () => void;
 }
 
@@ -15,6 +16,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: true,
   userId: null,
+  username: null,
   initialize: async () => {
     try {
       const hasToken = getAccessToken() !== null;
@@ -26,14 +28,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
       }
       const res = await validateToken();
-      set({ isAuthenticated: true, isLoading: false, userId: res.user_id });
+      set({ isAuthenticated: true, isLoading: false, userId: res.user_id, username: res.username });
     } catch {
-      set({ isAuthenticated: false, isLoading: false, userId: null });
+      set({ isAuthenticated: false, isLoading: false, userId: null, username: null });
     }
   },
-  setAuth: (userId: string) => set({ isAuthenticated: true, isLoading: false, userId }),
+  setAuth: (userId: string, username: string) => set({ isAuthenticated: true, isLoading: false, userId, username }),
   clearAuth: () => {
     setAccessToken(null);
-    set({ isAuthenticated: false, userId: null });
+    set({ isAuthenticated: false, userId: null, username: null });
   },
 }));

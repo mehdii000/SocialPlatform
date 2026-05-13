@@ -21,7 +21,11 @@ export function Header() {
   });
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+    } catch {
+      // Token already expired or network error — clear anyway
+    }
     clearAuth();
     navigate('/login');
   };

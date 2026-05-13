@@ -29,49 +29,79 @@ func (r *ProfileRepo) Create(ctx context.Context, userID uuid.UUID, username str
 
 func (r *ProfileRepo) GetByUserID(ctx context.Context, userID uuid.UUID) (*model.Profile, error) {
 	p := &model.Profile{}
+	var displayName, bio, avatarURL *string
 	err := r.pool.QueryRow(ctx,
 		`SELECT user_id, username, display_name, bio, avatar_url, created_at, updated_at
 		 FROM profiles WHERE user_id = $1`,
 		userID,
-	).Scan(&p.UserID, &p.Username, &p.DisplayName, &p.Bio, &p.AvatarURL, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.UserID, &p.Username, &displayName, &bio, &avatarURL, &p.CreatedAt, &p.UpdatedAt)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
+	}
+	if displayName != nil {
+		p.DisplayName = *displayName
+	}
+	if bio != nil {
+		p.Bio = *bio
+	}
+	if avatarURL != nil {
+		p.AvatarURL = *avatarURL
 	}
 	return p, nil
 }
 
 func (r *ProfileRepo) GetByUsername(ctx context.Context, username string) (*model.Profile, error) {
 	p := &model.Profile{}
+	var displayName, bio, avatarURL *string
 	err := r.pool.QueryRow(ctx,
 		`SELECT user_id, username, display_name, bio, avatar_url, created_at, updated_at
 		 FROM profiles WHERE username = $1`,
 		username,
-	).Scan(&p.UserID, &p.Username, &p.DisplayName, &p.Bio, &p.AvatarURL, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.UserID, &p.Username, &displayName, &bio, &avatarURL, &p.CreatedAt, &p.UpdatedAt)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
+	}
+	if displayName != nil {
+		p.DisplayName = *displayName
+	}
+	if bio != nil {
+		p.Bio = *bio
+	}
+	if avatarURL != nil {
+		p.AvatarURL = *avatarURL
 	}
 	return p, nil
 }
 
 func (r *ProfileRepo) Update(ctx context.Context, userID uuid.UUID, bio, displayName string) (*model.Profile, error) {
 	p := &model.Profile{}
+	var retDisplayName, retBio, retAvatarURL *string
 	err := r.pool.QueryRow(ctx,
 		`UPDATE profiles SET bio = $2, display_name = $3, updated_at = NOW()
 		 WHERE user_id = $1
 		 RETURNING user_id, username, display_name, bio, avatar_url, created_at, updated_at`,
 		userID, bio, displayName,
-	).Scan(&p.UserID, &p.Username, &p.DisplayName, &p.Bio, &p.AvatarURL, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.UserID, &p.Username, &retDisplayName, &retBio, &retAvatarURL, &p.CreatedAt, &p.UpdatedAt)
 	if err == pgx.ErrNoRows {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
+	}
+	if retDisplayName != nil {
+		p.DisplayName = *retDisplayName
+	}
+	if retBio != nil {
+		p.Bio = *retBio
+	}
+	if retAvatarURL != nil {
+		p.AvatarURL = *retAvatarURL
 	}
 	return p, nil
 }
@@ -113,8 +143,18 @@ func (r *ProfileRepo) Search(ctx context.Context, query string, cursor string, l
 	profiles := make([]model.Profile, 0)
 	for rows.Next() {
 		var p model.Profile
-		if err := rows.Scan(&p.UserID, &p.Username, &p.DisplayName, &p.Bio, &p.AvatarURL, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		var displayName, bio, avatarURL *string
+		if err := rows.Scan(&p.UserID, &p.Username, &displayName, &bio, &avatarURL, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
+		}
+		if displayName != nil {
+			p.DisplayName = *displayName
+		}
+		if bio != nil {
+			p.Bio = *bio
+		}
+		if avatarURL != nil {
+			p.AvatarURL = *avatarURL
 		}
 		profiles = append(profiles, p)
 	}
@@ -149,8 +189,18 @@ func (r *ProfileRepo) ListAll(ctx context.Context) ([]model.Profile, error) {
 	profiles := make([]model.Profile, 0)
 	for rows.Next() {
 		var p model.Profile
-		if err := rows.Scan(&p.UserID, &p.Username, &p.DisplayName, &p.Bio, &p.AvatarURL, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		var displayName, bio, avatarURL *string
+		if err := rows.Scan(&p.UserID, &p.Username, &displayName, &bio, &avatarURL, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, err
+		}
+		if displayName != nil {
+			p.DisplayName = *displayName
+		}
+		if bio != nil {
+			p.Bio = *bio
+		}
+		if avatarURL != nil {
+			p.AvatarURL = *avatarURL
 		}
 		profiles = append(profiles, p)
 	}

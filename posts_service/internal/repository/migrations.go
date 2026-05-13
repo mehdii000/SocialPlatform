@@ -31,11 +31,18 @@ CREATE TABLE IF NOT EXISTS posts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id UUID NOT NULL,
     content TEXT NOT NULL,
-    image_url TEXT,
+    media_url TEXT,
+    media_type SMALLINT NOT NULL DEFAULT 0 CHECK (media_type IN (0, 1, 2)),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_posts_author_created ON posts(author_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC);`
+CREATE INDEX IF NOT EXISTS idx_posts_created_at ON posts(created_at DESC);
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS media_type SMALLINT NOT NULL DEFAULT 0;
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='posts' AND column_name='image_url') THEN
+        ALTER TABLE posts RENAME COLUMN image_url TO media_url;
+    END IF;
+END $$;`
 
 const createLikesTable = `
 CREATE TABLE IF NOT EXISTS likes (

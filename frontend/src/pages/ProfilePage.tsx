@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import { getPublicProfile, fetchProfile, followUser, unfollowUser } from '@/api/users';
+import { getPublicProfile, fetchProfile, followUser, unfollowUser, getFollowers, getFollowing } from '@/api/users';
 import { fetchUserPosts } from '@/api/posts';
 import { PostCard } from '@/components/features/posts/PostCard';
 import { ProfileHeader } from '@/components/features/users/ProfileHeader';
@@ -33,13 +33,35 @@ export default function ProfilePage() {
     queryKey: ['userPosts', profile?.user_id],
     queryFn: ({ pageParam }) => fetchUserPosts(profile!.user_id, pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+    getNextPageParam: (lastPage) => lastPage.next_cursor || undefined,
+    enabled: !!profile?.user_id,
+  });
+
+  const { data: followersData } = useQuery({
+    queryKey: ['followers', profile?.user_id],
+    queryFn: () => getFollowers(profile!.user_id),
+    enabled: !!profile?.user_id,
+  });
+
+  const { data: followingData } = useQuery({
+    queryKey: ['following', profile?.user_id],
+    queryFn: () => getFollowing(profile!.user_id),
     enabled: !!profile?.user_id,
   });
 
   const isOwn = myProfile?.user_id === profile?.user_id;
   const [isFollowing, setIsFollowing] = useState(false);
+
+  useEffect(() => {
+    if (myId && followersData) {
+      setIsFollowing(followersData.data.some((f) => f.user_id === myId));
+    }
+  }, [myId, followersData]);
+
   const posts = data?.pages.flatMap((p) => p.data) ?? [];
+
+  const followersCount = followersData?.total ?? 0;
+  const followingCount = followingData?.total ?? 0;
 
   const handleFollow = async () => {
     if (!profile) return;
@@ -86,13 +108,14 @@ export default function ProfilePage() {
     <div>
       <ProfileHeader
         profile={profile}
-        followersCount={0}
-        followingCount={0}
+        followersCount={followersCount}
+        followingCount={followingCount}
         isFollowing={isFollowing}
         isOwn={isOwn}
         onFollow={handleFollow}
         onUnfollow={handleUnfollow}
         onMessage={handleMessage}
+        onEdit={() => navigate('/settings')}
       />
 
       <div className={styles.tabs}>

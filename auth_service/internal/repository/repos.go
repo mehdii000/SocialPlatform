@@ -88,6 +88,11 @@ func (r *UserRepo) IsUsernameTaken(ctx context.Context, username string) (bool, 
 	return count > 0, err
 }
 
+func (r *UserRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	_, err := r.pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+	return err
+}
+
 type TokenRepo struct {
 	pool *pgxpool.Pool
 }

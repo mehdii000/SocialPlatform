@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"golang.org/x/time/rate"
 
 	"github.com/mehdii000/SocialPlatform/gateway_service/internal/config"
 	"github.com/mehdii000/SocialPlatform/gateway_service/internal/handler"
@@ -27,7 +26,7 @@ func main() {
 	}
 
 	jwtAuth := middleware.NewJWTAuth(cfg.JWTSecret, logger)
-	rateLimiter := middleware.NewIPRateLimiter(rate.Limit(100), 200)
+	rateLimiter := middleware.NewIPRateLimiter()
 	proxyHandler := handler.NewProxyHandler(handler.ProxyConfig{
 		AuthURL:     cfg.AuthURL,
 		UsersURL:    cfg.UsersURL,

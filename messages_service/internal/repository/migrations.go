@@ -28,9 +28,9 @@ CREATE TABLE IF NOT EXISTS conversations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     participant_a UUID NOT NULL,
     participant_b UUID NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT uq_conversation_pair UNIQUE (LEAST(participant_a, participant_b), GREATEST(participant_a, participant_b))
-);`
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_conversation_pair ON conversations (LEAST(participant_a, participant_b), GREATEST(participant_a, participant_b));`
 
 const createMessagesTable = `
 CREATE TABLE IF NOT EXISTS messages (

@@ -6,9 +6,10 @@ import (
 )
 
 type Config struct {
-	Port        string
-	DatabaseURL string
-	JWTSecret   string
+	Port            string
+	DatabaseURL     string
+	JWTSecret       string
+	UsersServiceURL string
 }
 
 func Load() (*Config, error) {
@@ -37,8 +38,9 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		Port:        port,
-		DatabaseURL: required["AUTH_DB_URL"],
-		JWTSecret:   required["JWT_SECRET"],
+		Port:            port,
+		DatabaseURL:     required["AUTH_DB_URL"],
+		JWTSecret:       required["JWT_SECRET"],
+		UsersServiceURL: os.Getenv("USERS_SERVICE_URL"),
 	}, nil
 }

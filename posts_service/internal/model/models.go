@@ -11,7 +11,8 @@ type Post struct {
 	AuthorID      uuid.UUID `json:"user_id"`
 	Username      string    `json:"username"`
 	Content       string    `json:"content"`
-	ImageURL      string    `json:"media_url"`
+	MediaURL      string    `json:"media_url,omitempty"`
+	MediaType     int       `json:"media_type"`
 	LikesCount    int       `json:"likes_count"`
 	CommentsCount int       `json:"comments_count"`
 	CreatedAt     time.Time `json:"created_at"`

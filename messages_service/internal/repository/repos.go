@@ -68,10 +68,14 @@ func (r *MessageRepo) GetConversations(ctx context.Context, userID uuid.UUID) ([
 	convos := make([]model.Conversation, 0)
 	for rows.Next() {
 		var c model.Conversation
+		var avatarURL *string
 		var lastMsg *string
 		var lastTime *time.Time
-		if err := rows.Scan(&c.ID, &c.Participant, &c.AvatarURL, &lastMsg, &lastTime); err != nil {
+		if err := rows.Scan(&c.ID, &c.Participant, &avatarURL, &lastMsg, &lastTime); err != nil {
 			return nil, fmt.Errorf("scan conversation: %w", err)
+		}
+		if avatarURL != nil {
+			c.AvatarURL = *avatarURL
 		}
 		if lastMsg != nil {
 			c.LastMessage = *lastMsg
@@ -149,6 +153,21 @@ func (r *MessageRepo) SaveMessage(ctx context.Context, conversationID, senderID 
 		return nil, fmt.Errorf("save message: %w", err)
 	}
 	return m, nil
+}
+
+func (r *MessageRepo) GetUserIDByUsername(ctx context.Context, username string) (uuid.UUID, error) {
+	var id uuid.UUID
+	err := r.pool.QueryRow(ctx,
+		`SELECT user_id FROM profiles WHERE username = $1`,
+		username,
+	).Scan(&id)
+	if err == pgx.ErrNoRows {
+		return uuid.Nil, nil
+	}
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("lookup username: %w", err)
+	}
+	return id, nil
 }
 
 func (r *MessageRepo) GetParticipantIDs(ctx context.Context, conversationID uuid.UUID) (uuid.UUID, uuid.UUID, error) {

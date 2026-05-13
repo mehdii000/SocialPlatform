@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/mehdii000/SocialPlatform/auth_service/internal/client"
 	"github.com/mehdii000/SocialPlatform/auth_service/internal/config"
 	"github.com/mehdii000/SocialPlatform/auth_service/internal/handler"
 	"github.com/mehdii000/SocialPlatform/auth_service/internal/middleware"
@@ -52,7 +53,11 @@ func main() {
 
 	userRepo := repository.NewUserRepo(pool)
 	tokenRepo := repository.NewTokenRepo(pool)
-	authSvc := service.NewAuthService(userRepo, tokenRepo, cfg.JWTSecret)
+	var usersClient service.UsersClient
+	if cfg.UsersServiceURL != "" {
+		usersClient = client.NewUsersClient(cfg.UsersServiceURL)
+	}
+	authSvc := service.NewAuthService(userRepo, tokenRepo, cfg.JWTSecret, usersClient)
 	authHandler := handler.NewAuthHandler(authSvc, logger)
 
 	r := chi.NewRouter()

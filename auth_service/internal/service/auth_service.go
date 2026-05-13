@@ -20,48 +20,61 @@ const (
 	bcryptCost      = 12
 )
 
-type AuthService struct {
-	userRepo  *repository.UserRepo
-	tokenRepo *repository.TokenRepo
-	jwtSecret []byte
+type UsersClient interface {
+	CreateUser(ctx context.Context, userID uuid.UUID, username string) error
 }
 
-func NewAuthService(userRepo *repository.UserRepo, tokenRepo *repository.TokenRepo, jwtSecret string) *AuthService {
+type AuthService struct {
+	userRepo    *repository.UserRepo
+	tokenRepo   *repository.TokenRepo
+	jwtSecret   []byte
+	usersClient UsersClient
+}
+
+func NewAuthService(userRepo *repository.UserRepo, tokenRepo *repository.TokenRepo, jwtSecret string, usersClient UsersClient) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
-		tokenRepo: tokenRepo,
-		jwtSecret: []byte(jwtSecret),
+		userRepo:    userRepo,
+		tokenRepo:   tokenRepo,
+		jwtSecret:   []byte(jwtSecret),
+		usersClient: usersClient,
 	}
 }
 
-func (s *AuthService) Register(ctx context.Context, req model.RegisterRequest) (*model.TokenResponse, error) {
+func (s *AuthService) Register(ctx context.Context, req model.RegisterRequest) (uuid.UUID, error) {
 	taken, err := s.userRepo.IsUsernameTaken(ctx, req.Username)
 	if err != nil {
-		return nil, model.WrapError("Database error", 500, err)
+		return uuid.Nil, model.WrapError("Database error", 500, err)
 	}
 	if taken {
-		return nil, model.ErrUsernameTaken
+		return uuid.Nil, model.ErrUsernameTaken
 	}
 
 	taken, err = s.userRepo.IsEmailTaken(ctx, req.Email)
 	if err != nil {
-		return nil, model.WrapError("Database error", 500, err)
+		return uuid.Nil, model.WrapError("Database error", 500, err)
 	}
 	if taken {
-		return nil, model.ErrEmailTaken
+		return uuid.Nil, model.ErrEmailTaken
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcryptCost)
 	if err != nil {
-		return nil, model.WrapError("Internal error", 500, err)
+		return uuid.Nil, model.WrapError("Internal error", 500, err)
 	}
 
 	user, err := s.userRepo.Create(ctx, req.Username, req.Email, string(hash))
 	if err != nil {
-		return nil, model.WrapError("Failed to create user", 500, err)
+		return uuid.Nil, model.WrapError("Failed to create user", 500, err)
 	}
 
-	return s.generateTokens(user.ID)
+	if s.usersClient != nil {
+		if err := s.usersClient.CreateUser(ctx, user.ID, user.Username); err != nil {
+			s.userRepo.Delete(ctx, user.ID)
+			return uuid.Nil, model.WrapError("Failed to create user profile", 500, err)
+		}
+	}
+
+	return user.ID, nil
 }
 
 func (s *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model.TokenResponse, error) {
@@ -80,27 +93,38 @@ func (s *AuthService) Login(ctx context.Context, req model.LoginRequest) (*model
 	return s.generateTokens(user.ID)
 }
 
-func (s *AuthService) Refresh(ctx context.Context, rawRefreshToken string) (string, error) {
+func (s *AuthService) Refresh(ctx context.Context, rawRefreshToken string) (*model.TokenResponse, error) {
 	tokenHash := hashToken(rawRefreshToken)
 
 	stored, err := s.tokenRepo.GetByHash(ctx, tokenHash)
 	if err != nil {
-		return "", model.WrapError("Database error", 500, err)
+		return nil, model.WrapError("Database error", 500, err)
 	}
 	if stored == nil {
-		return "", model.ErrInvalidToken
+		return nil, model.ErrInvalidToken
 	}
 
 	if err := s.tokenRepo.DeleteByHash(ctx, tokenHash); err != nil {
-		return "", model.WrapError("Database error", 500, err)
+		return nil, model.WrapError("Database error", 500, err)
 	}
 
-	return s.generateAccessToken(stored.UserID)
+	return s.generateTokens(stored.UserID)
 }
 
 func (s *AuthService) Logout(ctx context.Context, rawRefreshToken string) error {
 	tokenHash := hashToken(rawRefreshToken)
 	return s.tokenRepo.DeleteByHash(ctx, tokenHash)
+}
+
+func (s *AuthService) GetUsername(ctx context.Context, userID uuid.UUID) (string, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return "", model.WrapError("Database error", 500, err)
+	}
+	if user == nil {
+		return "", model.ErrInvalidCredentials
+	}
+	return user.Username, nil
 }
 
 func (s *AuthService) ValidateToken(tokenString string) (uuid.UUID, error) {

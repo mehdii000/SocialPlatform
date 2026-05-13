@@ -27,16 +27,18 @@ func NewPostsService(postRepo *repository.PostRepo, likeRepo *repository.LikeRep
 }
 
 func (s *PostsService) CreatePost(ctx context.Context, authorID uuid.UUID, content string, imageFile multipart.File, imageHeader *multipart.FileHeader) (*model.Post, error) {
-	var imageURL string
+	var mediaURL string
+	mediaType := 0
 	if imageFile != nil {
 		filename, err := s.storage.UploadImage(ctx, imageFile, imageHeader)
 		if err != nil {
 			return nil, model.WrapError("File upload failed", 500, err)
 		}
-		imageURL = filename
+		mediaURL = filename
+		mediaType = 1
 	}
 
-	post, err := s.postRepo.Create(ctx, authorID, content, imageURL)
+	post, err := s.postRepo.Create(ctx, authorID, content, mediaURL, mediaType)
 	if err != nil {
 		return nil, model.WrapError("Database saving failed", 500, err)
 	}

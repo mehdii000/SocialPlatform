@@ -20,14 +20,14 @@ func NewPostRepo(pool *pgxpool.Pool) *PostRepo {
 	return &PostRepo{pool: pool}
 }
 
-func (r *PostRepo) Create(ctx context.Context, authorID uuid.UUID, content, imageURL string) (*model.Post, error) {
+func (r *PostRepo) Create(ctx context.Context, authorID uuid.UUID, content, mediaURL string, mediaType int) (*model.Post, error) {
 	p := &model.Post{}
 	err := r.pool.QueryRow(ctx,
-		`INSERT INTO posts (author_id, content, image_url)
-		 VALUES ($1, $2, $3)
-		 RETURNING id, author_id, content, image_url, created_at`,
-		authorID, content, imageURL,
-	).Scan(&p.ID, &p.AuthorID, &p.Content, &p.ImageURL, &p.CreatedAt)
+		`INSERT INTO posts (author_id, content, media_url, media_type)
+		 VALUES ($1, $2, $3, $4)
+		 RETURNING id, author_id, content, media_url, media_type, created_at`,
+		authorID, content, mediaURL, mediaType,
+	).Scan(&p.ID, &p.AuthorID, &p.Content, &p.MediaURL, &p.MediaType, &p.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("create post: %w", err)
 	}
@@ -36,9 +36,9 @@ func (r *PostRepo) Create(ctx context.Context, authorID uuid.UUID, content, imag
 
 func (r *PostRepo) GetByID(ctx context.Context, postID, viewerID uuid.UUID) (*model.Post, error) {
 	p := &model.Post{}
-	var imageURL *string
+	var mediaURL *string
 	err := r.pool.QueryRow(ctx,
-		`SELECT p.id, p.author_id, u.username, p.content, p.image_url, p.created_at,
+		`SELECT p.id, p.author_id, u.username, p.content, p.media_url, p.media_type, p.created_at,
 			(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likes_count,
 			(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
 			EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $2) as is_liked
@@ -46,7 +46,7 @@ func (r *PostRepo) GetByID(ctx context.Context, postID, viewerID uuid.UUID) (*mo
 		 JOIN profiles u ON p.author_id = u.user_id
 		 WHERE p.id = $1`,
 		postID, viewerID,
-	).Scan(&p.ID, &p.AuthorID, &p.Username, &p.Content, &imageURL, &p.CreatedAt,
+	).Scan(&p.ID, &p.AuthorID, &p.Username, &p.Content, &mediaURL, &p.MediaType, &p.CreatedAt,
 		&p.LikesCount, &p.CommentsCount, &p.IsLiked)
 	if err == pgx.ErrNoRows {
 		return nil, nil
@@ -54,8 +54,8 @@ func (r *PostRepo) GetByID(ctx context.Context, postID, viewerID uuid.UUID) (*mo
 	if err != nil {
 		return nil, fmt.Errorf("get post: %w", err)
 	}
-	if imageURL != nil {
-		p.ImageURL = *imageURL
+	if mediaURL != nil {
+		p.MediaURL = *mediaURL
 	}
 	return p, nil
 }
@@ -79,7 +79,7 @@ func (r *PostRepo) GetFeed(ctx context.Context, viewerID uuid.UUID, cursor strin
 	// In production, join with follows table
 	if cursor == "" {
 		rows, err = r.pool.Query(ctx,
-			`SELECT p.id, p.author_id, u.username, p.content, p.image_url, p.created_at,
+			`SELECT p.id, p.author_id, u.username, p.content, p.media_url, p.media_type, p.created_at,
 				(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likes_count,
 				(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
 				EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked
@@ -95,7 +95,7 @@ func (r *PostRepo) GetFeed(ctx context.Context, viewerID uuid.UUID, cursor strin
 			return nil, fmt.Errorf("invalid cursor: %w", parseErr)
 		}
 		rows, err = r.pool.Query(ctx,
-			`SELECT p.id, p.author_id, u.username, p.content, p.image_url, p.created_at,
+			`SELECT p.id, p.author_id, u.username, p.content, p.media_url, p.media_type, p.created_at,
 				(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likes_count,
 				(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
 				EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked
@@ -121,7 +121,7 @@ func (r *PostRepo) GetAllPosts(ctx context.Context, viewerID uuid.UUID, cursor s
 
 	if cursor == "" {
 		rows, err = r.pool.Query(ctx,
-			`SELECT p.id, p.author_id, u.username, p.content, p.image_url, p.created_at,
+			`SELECT p.id, p.author_id, u.username, p.content, p.media_url, p.media_type, p.created_at,
 				(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likes_count,
 				(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
 				EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked
@@ -137,7 +137,7 @@ func (r *PostRepo) GetAllPosts(ctx context.Context, viewerID uuid.UUID, cursor s
 			return nil, fmt.Errorf("invalid cursor: %w", parseErr)
 		}
 		rows, err = r.pool.Query(ctx,
-			`SELECT p.id, p.author_id, u.username, p.content, p.image_url, p.created_at,
+			`SELECT p.id, p.author_id, u.username, p.content, p.media_url, p.media_type, p.created_at,
 				(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likes_count,
 				(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
 				EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked
@@ -163,7 +163,7 @@ func (r *PostRepo) GetPostsByUser(ctx context.Context, authorID, viewerID uuid.U
 
 	if cursor == "" {
 		rows, err = r.pool.Query(ctx,
-			`SELECT p.id, p.author_id, u.username, p.content, p.image_url, p.created_at,
+			`SELECT p.id, p.author_id, u.username, p.content, p.media_url, p.media_type, p.created_at,
 				(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likes_count,
 				(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
 				EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked
@@ -180,7 +180,7 @@ func (r *PostRepo) GetPostsByUser(ctx context.Context, authorID, viewerID uuid.U
 			return nil, fmt.Errorf("invalid cursor: %w", parseErr)
 		}
 		rows, err = r.pool.Query(ctx,
-			`SELECT p.id, p.author_id, u.username, p.content, p.image_url, p.created_at,
+			`SELECT p.id, p.author_id, u.username, p.content, p.media_url, p.media_type, p.created_at,
 				(SELECT COUNT(*) FROM likes WHERE post_id = p.id) as likes_count,
 				(SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comments_count,
 				EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked
@@ -204,13 +204,13 @@ func scanPosts(rows pgx.Rows, limit int) (*model.PaginatedPosts, error) {
 	posts := make([]model.Post, 0)
 	for rows.Next() {
 		var p model.Post
-		var imageURL *string
-		if err := rows.Scan(&p.ID, &p.AuthorID, &p.Username, &p.Content, &imageURL, &p.CreatedAt,
+		var mediaURL *string
+		if err := rows.Scan(&p.ID, &p.AuthorID, &p.Username, &p.Content, &mediaURL, &p.MediaType, &p.CreatedAt,
 			&p.LikesCount, &p.CommentsCount, &p.IsLiked); err != nil {
 			return nil, fmt.Errorf("scan post: %w", err)
 		}
-		if imageURL != nil {
-			p.ImageURL = *imageURL
+		if mediaURL != nil {
+			p.MediaURL = *mediaURL
 		}
 		posts = append(posts, p)
 	}
@@ -249,7 +249,7 @@ func (r *LikeRepo) Toggle(ctx context.Context, userID, postID uuid.UUID) (liked 
 
 	var existingID uuid.UUID
 	err = tx.QueryRow(ctx,
-		`SELECT id FROM likes WHERE user_id = $1 AND post_id = $2 FOR UPDATE`,
+		`SELECT user_id FROM likes WHERE user_id = $1 AND post_id = $2 FOR UPDATE`,
 		userID, postID,
 	).Scan(&existingID)
 

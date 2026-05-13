@@ -80,8 +80,15 @@ func (h *MessagesHandler) CreateConversation(w http.ResponseWriter, r *http.Requ
 
 	participantID, err := uuid.Parse(req.ParticipantID)
 	if err != nil {
-		h.respondError(w, model.NewAppError("Invalid participant_id", 400))
-		return
+		participantID, err = h.repo.GetUserIDByUsername(r.Context(), req.ParticipantID)
+		if err != nil {
+			h.handleError(w, err)
+			return
+		}
+		if participantID == uuid.Nil {
+			h.respondError(w, model.NewAppError("User not found", 404))
+			return
+		}
 	}
 
 	convID, err := h.repo.CreateConversation(r.Context(), userID, participantID)

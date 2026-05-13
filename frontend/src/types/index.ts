@@ -21,6 +21,7 @@ export interface Post {
   username: string;
   content: string;
   media_url: string | null;
+  media_type: number;
   likes_count: number;
   comments_count: number;
   created_at: string;

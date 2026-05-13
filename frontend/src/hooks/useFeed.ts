@@ -7,7 +7,7 @@ export function useFeed() {
     queryKey: ['feed'],
     queryFn: ({ pageParam }) => fetchFeed(pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+    getNextPageParam: (lastPage) => lastPage.next_cursor || undefined,
   });
 }
 

@@ -18,8 +18,8 @@ export async function logout(): Promise<void> {
   setAccessToken(null);
 }
 
-export async function validateToken(): Promise<{ user_id: string }> {
-  return api.get<{ user_id: string }>('/api/auth/validate');
+export async function validateToken(): Promise<{ user_id: string; username: string }> {
+  return api.get<{ user_id: string; username: string }>('/api/auth/validate');
 }
 
 export async function silentRefresh(): Promise<boolean> {

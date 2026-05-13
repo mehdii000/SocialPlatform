@@ -79,12 +79,12 @@ func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case strings.HasPrefix(path, "/api/media/posts/"):
-		r.URL.Path = "/posts/" + strings.TrimPrefix(path, "/api/media/posts/")
+		r.URL.Path = "/post-images/" + strings.TrimPrefix(path, "/api/media/posts/")
 		h.minioProxy.ServeHTTP(w, r)
 		return
 
 	case strings.HasPrefix(path, "/api/media/profiles/"):
-		r.URL.Path = "/profiles/" + strings.TrimPrefix(path, "/api/media/profiles/")
+		r.URL.Path = "/avatars/" + strings.TrimPrefix(path, "/api/media/profiles/")
 		h.minioProxy.ServeHTTP(w, r)
 		return
 

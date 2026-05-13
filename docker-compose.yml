@@ -45,8 +45,11 @@ services:
       AUTH_DB_URL: ${AUTH_DB_URL}
       JWT_SECRET: ${JWT_SECRET}
       AUTH_SERVICE_PORT: "8001"
+      USERS_SERVICE_URL: http://users-service:8002
     depends_on:
       db:
+        condition: service_healthy
+      users-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
@@ -145,7 +148,7 @@ services:
       POSTS_SERVICE_URL: http://posts-service:8003
       MESSAGES_SERVICE_URL: http://messages-service:8004
       MINIO_URL: http://minio:9000
-      FRONTEND_URL: http://frontend:3000
+      FRONTEND_URL: http://frontend:80
     depends_on:
       auth-service:
         condition: service_healthy

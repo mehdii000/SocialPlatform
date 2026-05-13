@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AtSign, Lock } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { login } from '@/api/auth';
+import { login, validateToken } from '@/api/auth';
 import { useAuthStore } from '@/hooks/useAuth';
 import styles from './AuthForm.module.css';
 
@@ -21,8 +21,9 @@ export function LoginForm() {
     setLoading(true);
     setError('');
     try {
-      const res = await login({ email, password });
-      setAuth(res.jwt_token);
+      await login({ email, password });
+      const validated = await validateToken();
+      setAuth(validated.user_id, validated.username);
       navigate('/');
     } catch (err) {
       setError((err as Error).message || 'Invalid credentials');

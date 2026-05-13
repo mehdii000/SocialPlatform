@@ -35,16 +35,13 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.svc.Register(r.Context(), req)
+	_, err := h.svc.Register(r.Context(), req)
 	if err != nil {
 		h.handleServiceError(w, err)
 		return
 	}
 
-	h.setRefreshCookie(w, resp.RefreshToken)
-	resp.RefreshToken = ""
-
-	h.respondJSON(w, http.StatusCreated, resp)
+	h.respondJSON(w, http.StatusCreated, map[string]string{"message": "User created successfully"})
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -78,13 +75,15 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := h.svc.Refresh(r.Context(), refreshToken)
+	resp, err := h.svc.Refresh(r.Context(), refreshToken)
 	if err != nil {
 		h.handleServiceError(w, err)
 		return
 	}
 
-	h.respondJSON(w, http.StatusOK, model.RefreshResponse{AccessToken: accessToken})
+	h.setRefreshCookie(w, resp.RefreshToken)
+
+	h.respondJSON(w, http.StatusOK, model.RefreshResponse{AccessToken: resp.AccessToken})
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +115,13 @@ func (h *AuthHandler) Validate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.respondJSON(w, http.StatusOK, model.ValidateResponse{UserID: userID.String()})
+	username, err := h.svc.GetUsername(r.Context(), userID)
+	if err != nil {
+		h.handleServiceError(w, err)
+		return
+	}
+
+	h.respondJSON(w, http.StatusOK, model.ValidateResponse{UserID: userID.String(), Username: username})
 }
 
 func (h *AuthHandler) Health(w http.ResponseWriter, r *http.Request) {

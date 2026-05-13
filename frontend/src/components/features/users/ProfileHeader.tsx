@@ -13,6 +13,7 @@ interface ProfileHeaderProps {
   onFollow?: () => void;
   onUnfollow?: () => void;
   onMessage?: () => void;
+  onEdit?: () => void;
   onFollowersClick?: () => void;
   onFollowingClick?: () => void;
 }
@@ -26,6 +27,7 @@ export function ProfileHeader({
   onFollow,
   onUnfollow,
   onMessage,
+  onEdit,
   onFollowersClick,
   onFollowingClick,
 }: ProfileHeaderProps) {
@@ -60,7 +62,7 @@ export function ProfileHeader({
         </div>
         <div className={styles.actions}>
           {isOwn ? (
-            <Button variant="secondary" size="sm">Edit profile</Button>
+            <Button variant="secondary" size="sm" onClick={onEdit}>Edit profile</Button>
           ) : (
             <>
               {isFollowing ? (

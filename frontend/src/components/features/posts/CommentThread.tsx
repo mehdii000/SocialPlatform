@@ -22,7 +22,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
     queryKey: ['comments', postId],
     queryFn: ({ pageParam }) => fetchComments(postId, pageParam as string | undefined),
     initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.next_cursor ?? undefined,
+    getNextPageParam: (lastPage) => lastPage.next_cursor || undefined,
   });
 
   const handleSubmit = async () => {

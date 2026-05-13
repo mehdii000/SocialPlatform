@@ -75,12 +75,17 @@ func NewJWTAuth(secret string, logger *slog.Logger) *JWTAuth {
 		cache:   NewTokenCache(30 * time.Second),
 		logger:  logger,
 		skipPaths: map[string]bool{
-			"POST /api/auth/signup": true,
-			"POST /api/auth/login":  true,
-			"POST /api/auth/refresh": true,
+			"POST /api/auth/signup":              true,
+			"POST /api/auth/login":               true,
+			"POST /api/auth/refresh":             true,
+			"GET /api/users/profiles/getpublic":  true,
+			"GET /api/users/getusers":            true,
+			"GET /api/users/search":              true,
+			"GET /api/messages/ws":               true,
 		},
 		skipPrefixes: []string{
 			"/api/media/",
+			"/api/posts/getposts/",
 			"/health",
 			"/socket.io/",
 		},
@@ -112,6 +117,9 @@ func (a *JWTAuth) Middleware(next http.Handler) http.Handler {
 }
 
 func (a *JWTAuth) shouldSkip(r *http.Request) bool {
+	if !strings.HasPrefix(r.URL.Path, "/api/") {
+		return true
+	}
 	key := r.Method + " " + r.URL.Path
 	if a.skipPaths[key] {
 		return true
