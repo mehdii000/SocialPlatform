@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Home, Search, MessageCircle, User, LogOut } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ export function Header() {
     queryFn: fetchProfile,
   });
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await logout();
     } catch {
@@ -28,15 +28,15 @@ export function Header() {
     }
     clearAuth();
     navigate('/login');
-  };
+  }, [clearAuth, navigate]);
 
-  const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSearch = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim()) {
       navigate(`/profiles/${searchQuery.trim()}`);
       setShowSearch(false);
       setSearchQuery('');
     }
-  };
+  }, [searchQuery, navigate]);
 
   return (
     <header className={styles.header}>
@@ -46,13 +46,13 @@ export function Header() {
         </Link>
 
         <div className={styles.nav}>
-          <Link to="/" className={styles.navItem}><Home size={18} /></Link>
-          <button className={styles.navItem} onClick={() => setShowSearch(!showSearch)}><Search size={18} /></button>
-          <Link to="/messages" className={styles.navItem}><MessageCircle size={18} /></Link>
+          <Link to="/" className={styles.navItem} aria-label="Home"><Home size={18} /></Link>
+          <button className={styles.navItem} onClick={() => setShowSearch(!showSearch)} aria-label="Search users"><Search size={18} /></button>
+          <Link to="/messages" className={styles.navItem} aria-label="Messages"><MessageCircle size={18} /></Link>
         </div>
 
         <div className={styles.userArea}>
-          <button className={styles.userBtn} onClick={() => setShowMenu(!showMenu)}>
+          <button className={styles.userBtn} onClick={() => setShowMenu(!showMenu)} aria-label="User menu">
             <Avatar src={profile?.avatar_url} username={profile?.username || '?'} size="sm" />
           </button>
           {showMenu && (

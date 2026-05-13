@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { relativeTime } from '@/utils/format';
@@ -14,8 +14,11 @@ interface ConversationListProps {
 export function ConversationList({ conversations, selectedId, onSelect }: ConversationListProps) {
   const [search, setSearch] = useState('');
 
-  const filtered = conversations.filter((c) =>
-    c.from.toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(
+    () => conversations.filter((c) =>
+      c.from.toLowerCase().includes(search.toLowerCase())
+    ),
+    [conversations, search]
   );
 
   return (
@@ -35,6 +38,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Conver
             key={c.id}
             className={styles.convoItem + (c.id === selectedId ? ' ' + styles.active : '')}
             onClick={() => onSelect(c)}
+            aria-label={`Conversation with ${c.from}`}
           >
             <Avatar src={c.avatar} username={c.from} size="md" />
             <div className={styles.convoInfo}>

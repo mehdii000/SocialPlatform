@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -23,7 +23,7 @@ export function PostCard({ post, onDelete }: PostCardProps) {
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [showMenu, setShowMenu] = useState(false);
 
-  const handleLike = async () => {
+  const handleLike = useCallback(async () => {
     const prevLiked = isLiked;
     const prevCount = likesCount;
     setIsLiked(!isLiked);
@@ -34,15 +34,15 @@ export function PostCard({ post, onDelete }: PostCardProps) {
       setIsLiked(prevLiked);
       setLikesCount(prevCount);
     }
-  };
+  }, [isLiked, likesCount, post.id]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     try {
       await deletePost(post.id);
       onDelete?.(post.id);
     } catch {}
     setShowMenu(false);
-  };
+  }, [post.id, onDelete]);
 
   return (
     <article className={styles.card} onClick={() => navigate(`/posts/${post.id}`)}>
@@ -54,12 +54,12 @@ export function PostCard({ post, onDelete }: PostCardProps) {
         </div>
         {post.user_id === userId && (
           <div className={styles.menuWrap}>
-            <button className={styles.menuBtn} onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}>
+            <button className={styles.menuBtn} onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }} aria-label="Post actions">
               <MoreHorizontal size={16} />
             </button>
             {showMenu && (
               <div className={styles.dropdown}>
-                <button onClick={(e) => { e.stopPropagation(); handleDelete(); }}>
+                <button onClick={(e) => { e.stopPropagation(); handleDelete(); }} aria-label="Delete post">
                   <Trash2 size={14} /> Delete
                 </button>
               </div>
@@ -83,11 +83,11 @@ export function PostCard({ post, onDelete }: PostCardProps) {
       )}
 
       <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
-        <button className={clsx(styles.actionBtn, isLiked && styles.liked)} onClick={handleLike}>
+        <button className={clsx(styles.actionBtn, isLiked && styles.liked)} onClick={handleLike} aria-label={isLiked ? 'Unlike' : 'Like'}>
           <Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
           <span>{formatCount(likesCount)}</span>
         </button>
-        <button className={styles.actionBtn}>
+        <button className={styles.actionBtn} aria-label="Comments">
           <MessageCircle size={16} />
           <span>{formatCount(post.comments_count)}</span>
         </button>

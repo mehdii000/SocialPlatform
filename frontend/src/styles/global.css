@@ -24,3 +24,11 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+body.modal-open {
+  overflow: hidden;
+}

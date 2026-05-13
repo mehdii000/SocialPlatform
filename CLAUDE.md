@@ -92,3 +92,33 @@ src/
 ## API Contract
 
 REWRITE_NOTES.md is the authoritative reference for every route, request/response shape, and database schema. Preserving the external `/api/*` paths is mandatory.
+
+## Recent Improvements (2026-05-13)
+
+### Frontend
+
+- **Avatar**: Fixed broken-image fallback — now shows initials when image fails to load.
+- **PostComposer**: Fixed `ObjectURL` memory leak — revoke blob URLs on selection change and unmount.
+- **CSS**: Hoisted `@keyframes spin` to `global.css`, removed duplicates from component modules.
+- **useInfiniteScroll**: Stabilized `IntersectionObserver` via `useCallback` + `useRef` — no longer recreated every render.
+- **Performance**: All event handlers memoized with `useCallback`; `ConversationList` filter uses `useMemo`.
+- **Accessibility**: `aria-label` on all icon-only buttons; `role="dialog"` + `aria-modal` on Modal.
+- **Types**: Replaced `any` types in feed cache mutations with `PaginatedResponse<Post>`.
+- **Dead code**: Removed `/settings` nav, dead `typingUsers` state, unused `isFollowLoading` (now threaded to Button).
+- **Pagination**: ProfilePage uses intersection observer (consistent with FeedPage). MessageThread has "Load older messages" cursor-based pagination.
+- **Modal**: Body scroll lock via CSS class toggle instead of direct DOM mutation.
+
+### Messages Service
+
+- **WSMessage `from` field**: Now sends sender username (not UUID) — messages display correct sender in chat UI. Added `Username` field to `Client` struct, populated on WebSocket connect via `GetUsernameByID`.
+- **Duplicate messages**: Removed server echo to sender (was combined with optimistic frontend add, causing duplicates).
+- **Dependencies**: Added `users-service` healthcheck dependency in docker-compose for messages-service (prevents race on `profiles` table creation).
+- **go.sum**: Generated for both `messages_service` and `gateway_service` via `go mod tidy`.
+- **Dead code**: Removed `/socket.io/` route from gateway proxy. Removed unused `logger` param in `handleTyping`.
+- **Type check**: Both services pass `go vet`. Frontend passes `tsc --noEmit`.
+
+### Build Notes
+
+- Run `bun install` in `frontend/` before first `tsc --noEmit`.
+- Run `go mod tidy` in Go service directories if `go.sum` is missing.
+- Local tsc invocation (from project root): `/home/mehdi/Coding/SocialPlatform/frontend/node_modules/.bin/tsc -p /home/mehdi/Coding/SocialPlatform/frontend/tsconfig.json --noEmit`

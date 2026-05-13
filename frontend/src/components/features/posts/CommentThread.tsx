@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Send, Trash2 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
@@ -25,7 +25,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
     getNextPageParam: (lastPage) => lastPage.next_cursor || undefined,
   });
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!newComment.trim()) return;
     setSending(true);
     try {
@@ -34,14 +34,14 @@ export function CommentThread({ postId }: CommentThreadProps) {
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
     } catch {}
     setSending(false);
-  };
+  }, [newComment, postId, queryClient]);
 
-  const handleDelete = async (commentId: string) => {
+  const handleDelete = useCallback(async (commentId: string) => {
     try {
       await deleteComment(commentId);
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
     } catch {}
-  };
+  }, [postId, queryClient]);
 
   const comments = data?.pages.flatMap((p) => p.data) ?? [];
 
@@ -56,7 +56,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
           maxLength={280}
           rows={2}
         />
-        <Button size="sm" onClick={handleSubmit} loading={sending} disabled={!newComment.trim()}>
+        <Button size="sm" onClick={handleSubmit} loading={sending} disabled={!newComment.trim()} aria-label="Send comment">
           <Send size={14} />
         </Button>
       </div>
@@ -72,7 +72,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
             <p className={styles.text}>{c.content}</p>
           </div>
           {c.author_id === userId && (
-            <button className={styles.deleteBtn} onClick={() => handleDelete(c.id)}>
+            <button className={styles.deleteBtn} onClick={() => handleDelete(c.id)} aria-label="Delete comment">
               <Trash2 size={12} />
             </button>
           )}

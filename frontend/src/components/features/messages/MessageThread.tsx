@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { Send } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Avatar } from '@/components/ui/Avatar';
@@ -11,10 +11,12 @@ interface MessageThreadProps {
   messages: Message[];
   myUsername: string;
   onSend: (content: string) => void;
-  typingUsers?: string[];
+  hasOlder?: boolean;
+  loadingOlder?: boolean;
+  onLoadOlder?: () => void;
 }
 
-export function MessageThread({ conversation, messages, myUsername, onSend, typingUsers = [] }: MessageThreadProps) {
+export function MessageThread({ conversation, messages, myUsername, onSend, hasOlder, loadingOlder, onLoadOlder }: MessageThreadProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -22,20 +24,20 @@ export function MessageThread({ conversation, messages, myUsername, onSend, typi
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const val = inputRef.current?.value.trim();
     if (val) {
       onSend(val);
       inputRef.current!.value = '';
     }
-  };
+  }, [onSend]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
 
   return (
     <div className={styles.thread}>
@@ -45,6 +47,11 @@ export function MessageThread({ conversation, messages, myUsername, onSend, typi
       </div>
 
       <div className={styles.messages}>
+        {hasOlder && (
+          <button className={styles.loadOlder} onClick={onLoadOlder} disabled={loadingOlder}>
+            {loadingOlder ? 'Loading...' : 'Load older messages'}
+          </button>
+        )}
         {messages.map((m, i) => {
           const isMine = m.from === myUsername;
           const showDate = i === 0 || m.timestamp !== messages[i - 1].timestamp;
@@ -60,9 +67,6 @@ export function MessageThread({ conversation, messages, myUsername, onSend, typi
             </div>
           );
         })}
-        {typingUsers.length > 0 && (
-          <p className={styles.typing}>{typingUsers.join(', ')} typing...</p>
-        )}
         <div ref={bottomRef} />
       </div>
 
@@ -73,7 +77,7 @@ export function MessageThread({ conversation, messages, myUsername, onSend, typi
           placeholder="Type a message..."
           onKeyDown={handleKeyDown}
         />
-        <button className={styles.sendBtn} onClick={handleSend}>
+        <button className={styles.sendBtn} onClick={handleSend} aria-label="Send message">
           <Send size={16} />
         </button>
       </div>

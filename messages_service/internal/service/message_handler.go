@@ -26,7 +26,7 @@ func (mh *MessageHandler) HandleMessage(client *Client, msg WSIncoming, logger *
 	case "message":
 		mh.handleChatMessage(client, msg, logger)
 	case "typing":
-		mh.handleTyping(client, msg, logger)
+		mh.handleTyping(client, msg)
 	}
 }
 
@@ -60,6 +60,7 @@ func (mh *MessageHandler) handleChatMessage(client *Client, msg WSIncoming, logg
 		ID:             saved.ID,
 		ConversationID: msg.ConversationID,
 		SenderID:       client.UserID.String(),
+		From:           client.Username,
 		Content:        msg.Content,
 		CreatedAt:      saved.CreatedAt.Format(time.RFC3339),
 	}
@@ -67,10 +68,9 @@ func (mh *MessageHandler) handleChatMessage(client *Client, msg WSIncoming, logg
 	data, _ := json.Marshal(outgoing)
 
 	mh.hub.SendToUser(recipientID, data)
-	mh.hub.SendToUser(client.UserID, data)
 }
 
-func (mh *MessageHandler) handleTyping(client *Client, msg WSIncoming, logger *slog.Logger) {
+func (mh *MessageHandler) handleTyping(client *Client, msg WSIncoming) {
 	convID, err := uuid.Parse(msg.ConversationID)
 	if err != nil {
 		return
@@ -92,6 +92,7 @@ func (mh *MessageHandler) handleTyping(client *Client, msg WSIncoming, logger *s
 		Type:           "typing",
 		ConversationID: msg.ConversationID,
 		SenderID:       client.UserID.String(),
+		From:           client.Username,
 	}
 
 	data, _ := json.Marshal(outgoing)

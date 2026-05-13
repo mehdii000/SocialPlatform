@@ -170,6 +170,21 @@ func (r *MessageRepo) GetUserIDByUsername(ctx context.Context, username string) 
 	return id, nil
 }
 
+func (r *MessageRepo) GetUsernameByID(ctx context.Context, userID uuid.UUID) (string, error) {
+	var username string
+	err := r.pool.QueryRow(ctx,
+		`SELECT username FROM profiles WHERE user_id = $1`,
+		userID,
+	).Scan(&username)
+	if err == pgx.ErrNoRows {
+		return "", nil
+	}
+	if err != nil {
+		return "", fmt.Errorf("get username: %w", err)
+	}
+	return username, nil
+}
+
 func (r *MessageRepo) GetParticipantIDs(ctx context.Context, conversationID uuid.UUID) (uuid.UUID, uuid.UUID, error) {
 	var a, b uuid.UUID
 	err := r.pool.QueryRow(ctx,

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { clsx } from 'clsx';
 import styles from './Avatar.module.css';
 
@@ -17,17 +18,16 @@ const BASE = import.meta.env.VITE_API_BASE_URL || '';
 export function Avatar({ src, username, size = 'md', className }: AvatarProps) {
   const url = src ? `${BASE}/api/media/profiles/${src}` : null;
 
-  if (url) {
+  const [imgError, setImgError] = useState(false);
+
+  if (url && !imgError) {
     return (
       <img
         className={clsx(styles.avatar, styles[size], className)}
         src={url}
         alt={username}
         loading="lazy"
-        onError={(e) => {
-          (e.target as HTMLImageElement).style.display = 'none';
-          (e.target as HTMLImageElement).nextElementSibling?.classList.remove(styles.hidden);
-        }}
+        onError={() => setImgError(true)}
       />
     );
   }

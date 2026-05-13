@@ -89,6 +89,12 @@ func main() {
 			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
 			return
 		}
+		username, err := msgRepo.GetUsernameByID(r.Context(), userID)
+		if err != nil {
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+			logger.Error("failed to lookup username", "error", err)
+			return
+		}
 
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -98,6 +104,7 @@ func main() {
 
 		client := &service.Client{
 			UserID: userID,
+			Username: username,
 			Conn:   conn,
 			Send:   make(chan []byte, 256),
 			Hub:    hub,

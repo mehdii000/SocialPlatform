@@ -20,11 +20,11 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     }
     if (open) {
       document.addEventListener('keydown', onKey);
-      document.body.style.overflow = 'hidden';
+      document.body.classList.add('modal-open');
     }
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      document.body.classList.remove('modal-open');
     };
   }, [open, onClose]);
 
@@ -36,10 +36,10 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       className={styles.overlay}
       onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
     >
-      <div className={clsx(styles.modal, className)}>
+      <div className={clsx(styles.modal, className)} role="dialog" aria-modal="true" aria-label={title || 'Dialog'}>
         <div className={styles.header}>
           {title && <h2 className={styles.title}>{title}</h2>}
-          <button className={styles.close} onClick={onClose}>
+          <button className={styles.close} onClick={onClose} aria-label="Close dialog">
             <X size={18} />
           </button>
         </div>

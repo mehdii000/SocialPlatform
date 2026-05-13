@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { getPublicProfile, fetchProfile, followUser, unfollowUser, getFollowers, getFollowing } from '@/api/users';
@@ -7,6 +7,7 @@ import { PostCard } from '@/components/features/posts/PostCard';
 import { ProfileHeader } from '@/components/features/users/ProfileHeader';
 import { PostSkeleton } from '@/components/ui/Skeleton';
 import { useAuthStore } from '@/hooks/useAuth';
+import { useInfiniteScroll } from '@/hooks/useFeed';
 import styles from './ProfilePage.module.css';
 
 export default function ProfilePage() {
@@ -58,12 +59,14 @@ export default function ProfilePage() {
     }
   }, [myId, followersData]);
 
+  const loadMoreRef = useInfiniteScroll(!!hasNextPage, isFetchingNextPage, fetchNextPage);
+
   const posts = data?.pages.flatMap((p) => p.data) ?? [];
 
   const followersCount = followersData?.total ?? 0;
   const followingCount = followingData?.total ?? 0;
 
-  const handleFollow = async () => {
+  const handleFollow = useCallback(async () => {
     if (!profile) return;
     setIsFollowLoading(true);
     setIsFollowing(true);
@@ -73,9 +76,9 @@ export default function ProfilePage() {
       setIsFollowing(false);
     }
     setIsFollowLoading(false);
-  };
+  }, [profile]);
 
-  const handleUnfollow = async () => {
+  const handleUnfollow = useCallback(async () => {
     if (!profile) return;
     setIsFollowLoading(true);
     setIsFollowing(false);
@@ -85,11 +88,11 @@ export default function ProfilePage() {
       setIsFollowing(true);
     }
     setIsFollowLoading(false);
-  };
+  }, [profile]);
 
-  const handleMessage = () => {
+  const handleMessage = useCallback(() => {
     navigate('/messages', { state: { newChatUsername: profile?.username } });
-  };
+  }, [navigate, profile]);
 
   if (profileLoading) {
     return <div className={styles.center}><div className={styles.loader} /></div>;
@@ -112,10 +115,11 @@ export default function ProfilePage() {
         followingCount={followingCount}
         isFollowing={isFollowing}
         isOwn={isOwn}
+        followLoading={isFollowLoading}
         onFollow={handleFollow}
         onUnfollow={handleUnfollow}
         onMessage={handleMessage}
-        onEdit={() => navigate('/settings')}
+        onEdit={() => navigate(`/profiles/${profile?.username}`)}
       />
 
       <div className={styles.tabs}>
@@ -129,17 +133,13 @@ export default function ProfilePage() {
 
       <div className={styles.postList}>
         {posts.map((post) => (
-          <PostCard key={post.id} post={post} onDelete={() => queryClient.invalidateQueries({ queryKey: ['userPosts'] })} />
+          <PostCard key={post.id} post={post} onDelete={() => queryClient.invalidateQueries({ queryKey: ['userPosts', profile?.user_id] })} />
         ))}
         {posts.length === 0 && !isFetchingNextPage && (
           <p className={styles.emptyText}>No posts yet.</p>
         )}
         {isFetchingNextPage && <PostSkeleton />}
-        {hasNextPage && (
-          <button className={styles.loadMore} onClick={() => fetchNextPage()}>
-            Load more
-          </button>
-        )}
+        <div ref={loadMoreRef} style={{ height: 1 }} />
       </div>
     </div>
   );

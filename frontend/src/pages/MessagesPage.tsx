@@ -14,8 +14,8 @@ export default function MessagesPage() {
   const queryClient = useQueryClient();
   const [selectedConvo, setSelectedConvo] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
-
+  const [hasOlder, setHasOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const { data: profile } = useQuery({
     queryKey: ['myProfile'],
     queryFn: fetchProfile,
@@ -50,7 +50,7 @@ export default function MessagesPage() {
       ...prev,
       {
         id: msg.id || crypto.randomUUID(),
-        from: msg.sender_id || '',
+        from: msg.from || msg.sender_id || '',
         content: msg.content || '',
         timestamp: msg.created_at || new Date().toISOString(),
       },
@@ -66,11 +66,26 @@ export default function MessagesPage() {
 
   const handleSelectConvo = useCallback(async (convo: Conversation) => {
     setSelectedConvo(convo);
+    setMessages([]);
+    setHasOlder(false);
     try {
       const history = await fetchMessageHistory(convo.id);
       setMessages(history);
+      setHasOlder(history.length >= 50);
     } catch {}
   }, []);
+
+  const handleLoadOlder = useCallback(async () => {
+    if (!selectedConvo || messages.length === 0) return;
+    setLoadingOlder(true);
+    try {
+      const oldestId = messages[0].id;
+      const older = await fetchMessageHistory(selectedConvo.id, oldestId);
+      setMessages((prev) => [...older, ...prev]);
+      setHasOlder(older.length >= 50);
+    } catch {}
+    setLoadingOlder(false);
+  }, [selectedConvo, messages]);
 
   const handleSend = useCallback((content: string) => {
     if (!selectedConvo) return;
@@ -109,7 +124,9 @@ export default function MessagesPage() {
               messages={messages}
               myUsername={profile?.username || 'me'}
               onSend={handleSend}
-              typingUsers={typingUsers}
+              hasOlder={hasOlder}
+              loadingOlder={loadingOlder}
+              onLoadOlder={handleLoadOlder}
             />
           ) : (
             <div className={styles.noConvo}>

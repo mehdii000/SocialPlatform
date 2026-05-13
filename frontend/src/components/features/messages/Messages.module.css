@@ -119,3 +119,18 @@
   transition: background var(--transition-fast);
 }
 .sendBtn:hover { background: var(--color-accent-dim); }
+
+.loadOlder {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  transition: color var(--transition-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.loadOlder:hover:not(:disabled) { color: var(--color-accent); }
+.loadOlder:disabled { opacity: 0.5; cursor: default; }

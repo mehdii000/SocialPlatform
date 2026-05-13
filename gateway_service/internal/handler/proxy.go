@@ -74,10 +74,6 @@ func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.messagesProxy.ServeHTTP(w, r)
 		return
 
-	case strings.HasPrefix(path, "/socket.io/"):
-		h.messagesProxy.ServeHTTP(w, r)
-		return
-
 	case strings.HasPrefix(path, "/api/media/posts/"):
 		r.URL.Path = "/post-images/" + strings.TrimPrefix(path, "/api/media/posts/")
 		h.minioProxy.ServeHTTP(w, r)

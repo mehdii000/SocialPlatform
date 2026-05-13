@@ -10,6 +10,7 @@ interface ProfileHeaderProps {
   followingCount?: number;
   isFollowing?: boolean;
   isOwn?: boolean;
+  followLoading?: boolean;
   onFollow?: () => void;
   onUnfollow?: () => void;
   onMessage?: () => void;
@@ -24,6 +25,7 @@ export function ProfileHeader({
   followingCount = 0,
   isFollowing = false,
   isOwn = false,
+  followLoading = false,
   onFollow,
   onUnfollow,
   onMessage,
@@ -66,9 +68,9 @@ export function ProfileHeader({
           ) : (
             <>
               {isFollowing ? (
-                <Button variant="secondary" size="sm" onClick={onUnfollow}>Following</Button>
+                <Button variant="secondary" size="sm" onClick={onUnfollow} loading={followLoading}>Following</Button>
               ) : (
-                <Button size="sm" onClick={onFollow}>Follow</Button>
+                <Button size="sm" onClick={onFollow} loading={followLoading}>Follow</Button>
               )}
               <Button variant="secondary" size="sm" onClick={onMessage}>Message</Button>
             </>

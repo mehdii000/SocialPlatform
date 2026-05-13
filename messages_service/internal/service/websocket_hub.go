@@ -11,10 +11,11 @@ import (
 )
 
 type Client struct {
-	UserID uuid.UUID
-	Conn   *websocket.Conn
-	Send   chan []byte
-	Hub    *Hub
+	UserID   uuid.UUID
+	Username string
+	Conn     *websocket.Conn
+	Send     chan []byte
+	Hub      *Hub
 }
 
 const (

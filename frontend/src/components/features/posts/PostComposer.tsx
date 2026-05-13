@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Image, X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createPost } from '@/api/posts';
@@ -36,15 +36,23 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     fileRef.current?.click();
   };
 
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
       setImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
   };
 
   const removeImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImage(null);
     setImagePreview(null);
     if (fileRef.current) fileRef.current.value = '';

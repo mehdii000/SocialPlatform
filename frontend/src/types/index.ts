@@ -78,6 +78,7 @@ export interface WSMessage {
   id?: string;
   conversation_id?: string;
   sender_id?: string;
+  from?: string;
   content?: string;
   created_at?: string;
 }

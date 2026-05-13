@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { fetchFeed } from '@/api/posts';
 import type { Post } from '@/types';
@@ -16,19 +17,28 @@ export function useInfiniteScroll(
   isFetchingNextPage: boolean,
   fetchNextPage: () => void
 ) {
-  return (node: HTMLDivElement | null) => {
-    if (!node || !hasNextPage || isFetchingNextPage) return;
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
+  return useCallback(
+    (node: HTMLDivElement | null) => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+        observerRef.current = null;
+      }
+      if (!node || !hasNextPage || isFetchingNextPage) return;
 
-    observer.observe(node);
-    return () => observer.disconnect();
-  };
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            fetchNextPage();
+          }
+        },
+        { threshold: 0.1 }
+      );
+
+      observer.observe(node);
+      observerRef.current = observer;
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
 }

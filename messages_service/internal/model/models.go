@@ -28,6 +28,7 @@ type WSMessage struct {
 	ID             uuid.UUID `json:"id,omitempty"`
 	ConversationID string    `json:"conversation_id,omitempty"`
 	SenderID       string    `json:"sender_id,omitempty"`
+	From           string    `json:"from,omitempty"`
 	Content        string    `json:"content,omitempty"`
 	CreatedAt      string    `json:"created_at,omitempty"`
 }
