@@ -9,34 +9,37 @@ import (
 )
 
 type ProxyHandler struct {
-	authProxy     *httputil.ReverseProxy
-	usersProxy    *httputil.ReverseProxy
-	postsProxy    *httputil.ReverseProxy
-	messagesProxy *httputil.ReverseProxy
-	minioProxy    *httputil.ReverseProxy
-	frontendProxy *httputil.ReverseProxy
-	logger        *slog.Logger
+	authProxy      *httputil.ReverseProxy
+	usersProxy     *httputil.ReverseProxy
+	postsProxy     *httputil.ReverseProxy
+	messagesProxy  *httputil.ReverseProxy
+	resonanceProxy *httputil.ReverseProxy
+	minioProxy     *httputil.ReverseProxy
+	frontendProxy  *httputil.ReverseProxy
+	logger         *slog.Logger
 }
 
 func NewProxyHandler(cfg ProxyConfig, logger *slog.Logger) *ProxyHandler {
 	return &ProxyHandler{
-		authProxy:     newSingleHostProxy(cfg.AuthURL),
-		usersProxy:    newSingleHostProxy(cfg.UsersURL),
-		postsProxy:    newSingleHostProxy(cfg.PostsURL),
-		messagesProxy: newSingleHostProxy(cfg.MessagesURL),
-		minioProxy:    newSingleHostProxy(cfg.MinioURL),
-		frontendProxy: newSingleHostProxy(cfg.FrontendURL),
-		logger:        logger,
+		authProxy:      newSingleHostProxy(cfg.AuthURL),
+		usersProxy:     newSingleHostProxy(cfg.UsersURL),
+		postsProxy:     newSingleHostProxy(cfg.PostsURL),
+		messagesProxy:  newSingleHostProxy(cfg.MessagesURL),
+		resonanceProxy: newSingleHostProxy(cfg.ResonanceURL),
+		minioProxy:     newSingleHostProxy(cfg.MinioURL),
+		frontendProxy:  newSingleHostProxy(cfg.FrontendURL),
+		logger:         logger,
 	}
 }
 
 type ProxyConfig struct {
-	AuthURL     string
-	UsersURL    string
-	PostsURL    string
-	MessagesURL string
-	MinioURL    string
-	FrontendURL string
+	AuthURL      string
+	UsersURL     string
+	PostsURL     string
+	MessagesURL  string
+	ResonanceURL string
+	MinioURL     string
+	FrontendURL  string
 }
 
 func newSingleHostProxy(targetURL string) *httputil.ReverseProxy {
@@ -72,6 +75,11 @@ func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(path, "/api/messages/"):
 		r.URL.Path = "/" + strings.TrimPrefix(path, "/api/messages/")
 		h.messagesProxy.ServeHTTP(w, r)
+		return
+
+	case strings.HasPrefix(path, "/api/resonance/"):
+		r.URL.Path = "/" + strings.TrimPrefix(path, "/api/resonance/")
+		h.resonanceProxy.ServeHTTP(w, r)
 		return
 
 	case strings.HasPrefix(path, "/api/media/posts/"):

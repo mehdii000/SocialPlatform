@@ -1,12 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, MoreHorizontal, Trash2 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Avatar } from '@/components/ui/Avatar';
+import { TopicTag } from '@/components/ui/TopicTag';
 import { relativeTime, formatCount } from '@/utils/format';
 import { likePost, deletePost } from '@/api/posts';
+import { fetchPostTopics, engage } from '@/api/resonance';
 import { useAuthStore } from '@/hooks/useAuth';
-import type { Post } from '@/types';
+import type { Post, TopicTag as TopicTagType } from '@/types';
 import styles from './PostCard.module.css';
 
 const MEDIA_BASE = (import.meta.env.VITE_API_BASE_URL || '') + '/api/media/posts/';
@@ -22,6 +24,13 @@ export function PostCard({ post, onDelete }: PostCardProps) {
   const [isLiked, setIsLiked] = useState(post.is_liked);
   const [likesCount, setLikesCount] = useState(post.likes_count);
   const [showMenu, setShowMenu] = useState(false);
+  const [tags, setTags] = useState<TopicTagType[]>([]);
+
+  useEffect(() => {
+    fetchPostTopics(post.id).then(res => {
+      if (res?.topics) setTags(res.topics);
+    }).catch(() => {});
+  }, [post.id]);
 
   const handleLike = useCallback(async () => {
     const prevLiked = isLiked;
@@ -30,6 +39,7 @@ export function PostCard({ post, onDelete }: PostCardProps) {
     setLikesCount(isLiked ? likesCount - 1 : likesCount + 1);
     try {
       await likePost(post.id);
+      engage(post.id, 'like').catch(() => {});
     } catch {
       setIsLiked(prevLiked);
       setLikesCount(prevCount);
@@ -69,6 +79,17 @@ export function PostCard({ post, onDelete }: PostCardProps) {
       </div>
 
       <p className={styles.content}>{post.content}</p>
+
+      {tags.length > 0 && (
+        <div className={styles.tagsRow} onClick={(e) => e.stopPropagation()}>
+          {tags.slice(0, 3).map((t) => (
+            <TopicTag key={t.slug} slug={t.slug} name={t.name} />
+          ))}
+          {tags.length > 3 && (
+            <span className={styles.moreTags}>+{tags.length - 3} more</span>
+          )}
+        </div>
+      )}
 
       {post.media_url && (
         <div className={styles.mediaWrap}>

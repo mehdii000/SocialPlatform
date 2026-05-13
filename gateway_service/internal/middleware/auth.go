@@ -82,10 +82,12 @@ func NewJWTAuth(secret string, logger *slog.Logger) *JWTAuth {
 			"GET /api/users/getusers":            true,
 			"GET /api/users/search":              true,
 			"GET /api/messages/ws":               true,
+			"GET /api/resonance/topics":          true,
 		},
 		skipPrefixes: []string{
 			"/api/media/",
 			"/api/posts/getposts/",
+			"/api/resonance/topics",
 			"/health",
 			"/socket.io/",
 		},
@@ -95,6 +97,14 @@ func NewJWTAuth(secret string, logger *slog.Logger) *JWTAuth {
 func (a *JWTAuth) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if a.shouldSkip(r) {
+			// Optional auth: try to inject X-User-ID if a valid token is present,
+			// but never reject requests on skipped paths.
+			token := extractToken(r)
+			if token != "" {
+				if userID, err := a.validateToken(token); err == nil {
+					r.Header.Set("X-User-ID", userID)
+				}
+			}
 			next.ServeHTTP(w, r)
 			return
 		}

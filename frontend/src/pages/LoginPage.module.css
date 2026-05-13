@@ -4,14 +4,18 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
+  background: linear-gradient(180deg, var(--color-bg) 0%, #fff5f3 100%);
 }
 
 .card {
   width: 100%;
-  max-width: 400px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-8);
+  max-width: 420px;
+  background: var(--color-surface);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-10);
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 300ms var(--transition-spring);
 }
 
 .brand {
@@ -20,11 +24,11 @@
 }
 
 .logo {
-  font-family: var(--font-mono);
-  font-size: var(--font-size-2xl);
+  font-family: var(--font-display);
+  font-size: var(--font-size-3xl);
   font-weight: 700;
   color: var(--color-accent);
-  letter-spacing: -0.04em;
+  letter-spacing: -0.02em;
   margin-bottom: var(--space-2);
 }
 
@@ -35,10 +39,10 @@
 
 .tabs {
   display: flex;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  border-radius: var(--radius-full);
   margin-bottom: var(--space-6);
-  padding: 2px;
+  padding: 3px;
 }
 
 .tab,
@@ -47,19 +51,18 @@
   text-align: center;
   padding: var(--space-2) 0;
   font-size: var(--font-size-sm);
-  font-weight: 500;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  border-radius: var(--radius-full);
   transition: all var(--transition-fast);
 }
 
 .tab {
   color: var(--color-text-secondary);
 }
-.tab:hover {
-  color: var(--color-text);
-}
+.tab:hover { color: var(--color-text); }
 
 .tabActive {
   background: var(--color-surface);
   color: var(--color-text);
+  box-shadow: var(--shadow-sm);
 }

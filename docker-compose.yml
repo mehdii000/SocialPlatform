@@ -6,6 +6,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -135,6 +137,26 @@ services:
     networks:
       - backend
 
+  resonance-service:
+    build:
+      context: ./resonance_service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      RESONANCE_DB_URL: ${RESONANCE_DB_URL:-postgres://user:password@db:5432/social_db?sslmode=disable}
+      RESONANCE_SERVICE_PORT: "8005"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    networks:
+      - backend
+
   gateway:
     build:
       context: ./gateway_service
@@ -149,6 +171,7 @@ services:
       USERS_SERVICE_URL: http://users-service:8002
       POSTS_SERVICE_URL: http://posts-service:8003
       MESSAGES_SERVICE_URL: http://messages-service:8004
+      RESONANCE_SERVICE_URL: http://resonance-service:8005
       MINIO_URL: http://minio:9000
       FRONTEND_URL: http://frontend:80
     depends_on:
@@ -159,6 +182,8 @@ services:
       posts-service:
         condition: service_healthy
       messages-service:
+        condition: service_healthy
+      resonance-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]

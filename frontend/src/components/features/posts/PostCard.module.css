@@ -1,12 +1,16 @@
 .card {
-  padding: var(--space-4);
-  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border: var(--border);
   border-radius: var(--radius-lg);
+  padding: var(--space-4);
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  animation: fadeInUp 300ms ease both;
 }
 .card:hover {
-  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .header {
@@ -23,8 +27,9 @@
 }
 
 .displayName {
+  font-family: var(--font-display);
   font-weight: 600;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
 }
 .displayName:hover { color: var(--color-accent); }
 
@@ -36,7 +41,7 @@
 
 .content {
   font-size: var(--font-size-base);
-  line-height: 1.6;
+  line-height: 1.65;
   margin-bottom: var(--space-3);
   white-space: pre-wrap;
 }
@@ -64,36 +69,40 @@
   gap: var(--space-1);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  font-weight: 500;
   transition: color var(--transition-fast);
+  padding: var(--space-1);
+  border-radius: var(--radius-full);
 }
 .actionBtn:hover { color: var(--color-text); }
 
 .liked {
-  color: var(--color-danger);
+  color: var(--color-accent);
 }
-.liked:hover { color: var(--color-danger-hover); }
+.liked:hover { color: var(--color-accent-hover); }
 
-.menuWrap {
-  position: relative;
-}
+.menuWrap { position: relative; }
 
 .menuBtn {
   color: var(--color-text-muted);
-  padding: 2px;
-  border-radius: var(--radius-sm);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
 }
-.menuBtn:hover { color: var(--color-text); }
+.menuBtn:hover { color: var(--color-text); background: var(--color-surface-hover); }
 
 .dropdown {
   position: absolute;
   right: 0;
   top: 100%;
   z-index: 10;
-  min-width: 120px;
+  min-width: 130px;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  border: var(--border);
   border-radius: var(--radius-md);
   padding: var(--space-1);
+  box-shadow: var(--shadow-lg);
+  animation: scaleIn 150ms var(--transition-spring);
 }
 .dropdown button {
   display: flex;
@@ -104,9 +113,23 @@
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   color: var(--color-danger);
-  transition: background var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 .dropdown button:hover {
   background: var(--color-danger);
-  color: white;
+  color: #fff;
+}
+
+.tagsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.moreTags {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  padding: 2px 6px;
 }

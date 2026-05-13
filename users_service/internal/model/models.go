@@ -17,10 +17,13 @@ type Profile struct {
 }
 
 type PublicProfile struct {
-	UserID    uuid.UUID `json:"user_id"`
-	Username  string    `json:"username"`
-	Bio       string    `json:"bio,omitempty"`
-	AvatarURL string    `json:"avatar_url,omitempty"`
+	UserID         uuid.UUID `json:"user_id"`
+	Username       string    `json:"username"`
+	Bio            string    `json:"bio,omitempty"`
+	AvatarURL      string    `json:"avatar_url,omitempty"`
+	IsFollowing    bool      `json:"is_following"`
+	FollowersCount int       `json:"followers_count"`
+	FollowingCount int       `json:"following_count"`
 }
 
 type UpdateProfileRequest struct {

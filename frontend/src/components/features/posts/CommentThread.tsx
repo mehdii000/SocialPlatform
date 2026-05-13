@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { relativeTime } from '@/utils/format';
 import { fetchComments, createComment, deleteComment } from '@/api/posts';
+import { engage } from '@/api/resonance';
 import { useAuthStore } from '@/hooks/useAuth';
 import styles from './CommentThread.module.css';
 
@@ -32,6 +33,7 @@ export function CommentThread({ postId }: CommentThreadProps) {
       await createComment(postId, newComment.trim());
       setNewComment('');
       queryClient.invalidateQueries({ queryKey: ['comments', postId] });
+      engage(postId, 'comment').catch(() => {});
     } catch {}
     setSending(false);
   }, [newComment, postId, queryClient]);

@@ -7,9 +7,11 @@
 .error {
   color: var(--color-danger);
   font-size: var(--font-size-sm);
+  font-weight: 500;
 }
 
 .success {
   color: var(--color-online);
   font-size: var(--font-size-sm);
+  font-weight: 500;
 }

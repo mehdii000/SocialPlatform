@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Image, X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { createPost } from '@/api/posts';
+import { extractTopics, engage } from '@/api/resonance';
 import styles from './PostComposer.module.css';
 
 interface PostComposerProps {
@@ -21,11 +22,15 @@ export function PostComposer({ onPostCreated }: PostComposerProps) {
     setLoading(true);
     setError('');
     try {
-      await createPost(content.trim(), image || undefined);
+      const result = await createPost(content.trim(), image || undefined);
       setContent('');
       setImage(null);
       setImagePreview(null);
       onPostCreated();
+      // Fire-and-forget: auto-tag post + record engagement
+      const postId = result.post_id;
+      extractTopics(postId, content.trim()).catch(() => {});
+      engage(postId, 'create').catch(() => {});
     } catch (e) {
       setError((e as Error).message || 'Failed to create post');
     }

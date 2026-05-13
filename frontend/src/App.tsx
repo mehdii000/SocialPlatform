@@ -8,6 +8,8 @@ import FeedPage from '@/pages/FeedPage';
 import ProfilePage from '@/pages/ProfilePage';
 import PostPage from '@/pages/PostPage';
 import MessagesPage from '@/pages/MessagesPage';
+import ExplorePage from '@/pages/ExplorePage';
+import TopicPage from '@/pages/TopicPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +40,8 @@ function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Layout />}>
         <Route path="/" element={<FeedPage />} />
+        <Route path="/explore" element={<ExplorePage />} />
+        <Route path="/topics/:slug" element={<TopicPage />} />
         <Route path="/profiles/:username" element={<ProfilePage />} />
         <Route path="/posts/:postId" element={<PostPage />} />
         <Route path="/messages" element={<MessagesPage />} />

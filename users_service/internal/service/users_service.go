@@ -40,7 +40,7 @@ func (s *UsersService) GetProfile(ctx context.Context, userID uuid.UUID) (*model
 	return p, nil
 }
 
-func (s *UsersService) GetPublicProfile(ctx context.Context, username string) (*model.PublicProfile, error) {
+func (s *UsersService) GetPublicProfile(ctx context.Context, username string, viewerID uuid.UUID) (*model.PublicProfile, error) {
 	p, err := s.profileRepo.GetByUsername(ctx, username)
 	if err != nil {
 		return nil, model.WrapError("Database error", 500, err)
@@ -48,12 +48,25 @@ func (s *UsersService) GetPublicProfile(ctx context.Context, username string) (*
 	if p == nil {
 		return nil, model.ErrProfileNotFound
 	}
-	return &model.PublicProfile{
+
+	profile := &model.PublicProfile{
 		UserID:    p.UserID,
 		Username:  p.Username,
 		Bio:       p.Bio,
 		AvatarURL: p.AvatarURL,
-	}, nil
+	}
+
+	if viewerID != uuid.Nil {
+		isFollowing, _ := s.followRepo.IsFollowing(ctx, viewerID, p.UserID)
+		profile.IsFollowing = isFollowing
+	}
+
+	followers, _ := s.followRepo.CountFollowers(ctx, p.UserID)
+	following, _ := s.followRepo.CountFollowing(ctx, p.UserID)
+	profile.FollowersCount = followers
+	profile.FollowingCount = following
+
+	return profile, nil
 }
 
 func (s *UsersService) UpdateProfile(ctx context.Context, userID uuid.UUID, req model.UpdateProfileRequest) (*model.Profile, error) {

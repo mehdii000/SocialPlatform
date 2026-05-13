@@ -28,12 +28,13 @@ func main() {
 	jwtAuth := middleware.NewJWTAuth(cfg.JWTSecret, logger)
 	rateLimiter := middleware.NewIPRateLimiter()
 	proxyHandler := handler.NewProxyHandler(handler.ProxyConfig{
-		AuthURL:     cfg.AuthURL,
-		UsersURL:    cfg.UsersURL,
-		PostsURL:    cfg.PostsURL,
-		MessagesURL: cfg.MessagesURL,
-		MinioURL:    cfg.MinioURL,
-		FrontendURL: cfg.FrontendURL,
+		AuthURL:      cfg.AuthURL,
+		UsersURL:     cfg.UsersURL,
+		PostsURL:     cfg.PostsURL,
+		MessagesURL:  cfg.MessagesURL,
+		ResonanceURL: cfg.ResonanceURL,
+		MinioURL:     cfg.MinioURL,
+		FrontendURL:  cfg.FrontendURL,
 	}, logger)
 
 	r := chi.NewRouter()

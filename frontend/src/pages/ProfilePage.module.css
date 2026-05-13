@@ -9,11 +9,13 @@
 
 .notFound {
   color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
 }
 
 .backBtn {
   color: var(--color-accent);
   font-size: var(--font-size-sm);
+  font-weight: 600;
 }
 .backBtn:hover { text-decoration: underline; }
 
@@ -28,21 +30,24 @@
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid var(--color-border);
+  gap: var(--space-1);
   margin-bottom: var(--space-4);
 }
 
 .tab,
 .tabActive {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-4);
   font-size: var(--font-size-sm);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-text-secondary);
-  border-bottom: 2px solid transparent;
+  border-radius: var(--radius-full);
   transition: all var(--transition-fast);
 }
-.tab:hover { color: var(--color-text); }
-.tabActive { color: var(--color-text); border-bottom-color: var(--color-accent); }
+.tab:hover { color: var(--color-text); background: var(--color-surface-hover); }
+.tabActive {
+  color: #fff;
+  background: var(--color-accent);
+}
 
 .postList {
   display: flex;
@@ -53,6 +58,7 @@
 .emptyText {
   text-align: center;
   color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
   padding: var(--space-8);
 }
 
@@ -62,6 +68,7 @@
   padding: var(--space-3);
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
+  font-weight: 500;
   transition: color var(--transition-fast);
 }
 .loadMore:hover { color: var(--color-accent); }

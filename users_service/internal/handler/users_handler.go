@@ -58,7 +58,9 @@ func (h *UsersHandler) GetPublicProfile(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	p, err := h.svc.GetPublicProfile(r.Context(), username)
+	viewerID := middleware.GetUserID(r.Context())
+
+	p, err := h.svc.GetPublicProfile(r.Context(), username, viewerID)
 	if err != nil {
 		h.handleError(w, err)
 		return

@@ -1,25 +1,30 @@
 .thread {
-  padding: var(--space-4);
-  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border: var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .composer {
   display: flex;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  margin-bottom: 0;
   align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
 }
 
 .input {
   flex: 1;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  border: var(--border);
   border-radius: var(--radius-md);
   padding: var(--space-2) var(--space-3);
   color: var(--color-text);
   font-size: var(--font-size-sm);
   resize: none;
   outline: none;
+  transition: border-color var(--transition-fast);
 }
 .input:focus { border-color: var(--color-accent); }
 .input::placeholder { color: var(--color-text-muted); }
@@ -27,7 +32,10 @@
 .comment {
   display: flex;
   gap: var(--space-2);
-  padding: var(--space-2) 0;
+  padding: var(--space-3) var(--space-4);
+}
+.comment + .comment {
+  border-top: var(--border);
 }
 
 .body {
@@ -43,6 +51,7 @@
 }
 
 .username {
+  font-family: var(--font-display);
   font-weight: 600;
   font-size: var(--font-size-sm);
 }
@@ -75,7 +84,8 @@
   text-align: center;
   color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
-  padding: var(--space-2);
+  font-weight: 500;
+  padding: var(--space-3);
   transition: color var(--transition-fast);
 }
 .loadMore:hover { color: var(--color-accent); }

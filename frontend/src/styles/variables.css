@@ -1,34 +1,34 @@
 :root {
-  /* Colors */
-  --color-bg: #0e0e10;
-  --color-surface: #2a2a2d;
-  --color-surface-hover: #323236;
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-border-strong: rgba(255, 255, 255, 0.12);
-  --color-text: #f0f0ef;
-  --color-text-secondary: #888892;
-  --color-text-muted: #5c5c65;
-  --color-accent: #c9a84c;
-  --color-accent-hover: #d4b35e;
-  --color-accent-dim: rgba(201, 168, 76, 0.15);
-  --color-danger: #e5484d;
-  --color-danger-hover: #f2555a;
-  --color-online: #46a758;
-  --color-offline: #888892;
+  /* Palette — Playful Modern */
+  --color-bg: #faf9f6;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f5f3f0;
+  --color-border: #e8e4de;
+  --color-border-strong: #d4cfc8;
+  --color-text: #1d1a18;
+  --color-text-secondary: #6e6962;
+  --color-text-muted: #9d9790;
+  --color-accent: #ff6b6b;
+  --color-accent-hover: #f55757;
+  --color-accent-dim: rgba(255, 107, 107, 0.1);
+  --color-accent-secondary: #5b7fff;
+  --color-danger: #e5534b;
+  --color-danger-hover: #d1433b;
+  --color-online: #3fb950;
+  --color-offline: #9d9790;
 
   /* Typography */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Fredoka', 'Inter', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
   --font-size-xs: 11px;
-  --font-size-sm: 12px;
-  --font-size-base: 14px;
-  --font-size-lg: 16px;
-  --font-size-xl: 20px;
-  --font-size-2xl: 24px;
-  --font-size-3xl: 32px;
-  --line-height: 1.5;
-  --letter-spacing-tight: -0.02em;
-  --letter-spacing-normal: 0;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-lg: 17px;
+  --font-size-xl: 22px;
+  --font-size-2xl: 28px;
+  --font-size-3xl: 36px;
+  --line-height: 1.55;
 
   /* Spacing (8px base) */
   --space-1: 4px;
@@ -41,14 +41,27 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-20: 80px;
 
-  /* Border radius */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* Border radius — soft, rounded */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 99px;
+
+  /* Borders */
+  --border: 1px solid var(--color-border);
+  --border-strong: 1px solid var(--color-border-strong);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-xl: 0 8px 32px rgba(0,0,0,0.1);
 
   /* Transitions */
-  --transition-fast: 100ms ease;
+  --transition-fast: 120ms ease;
   --transition-normal: 200ms ease;
+  --transition-spring: 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }

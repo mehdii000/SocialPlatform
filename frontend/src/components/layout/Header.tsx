@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Home, Search, MessageCircle, User, LogOut } from 'lucide-react';
+import { Home, Search, MessageCircle, Compass, User, LogOut } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar } from '@/components/ui/Avatar';
 import { fetchProfile } from '@/api/users';
@@ -47,6 +47,7 @@ export function Header() {
 
         <div className={styles.nav}>
           <Link to="/" className={styles.navItem} aria-label="Home"><Home size={18} /></Link>
+          <Link to="/explore" className={styles.navItem} aria-label="Explore"><Compass size={18} /></Link>
           <button className={styles.navItem} onClick={() => setShowSearch(!showSearch)} aria-label="Search users"><Search size={18} /></button>
           <Link to="/messages" className={styles.navItem} aria-label="Messages"><MessageCircle size={18} /></Link>
         </div>

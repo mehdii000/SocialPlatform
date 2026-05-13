@@ -13,6 +13,9 @@ export interface PublicProfile {
   username: string;
   bio: string;
   avatar_url: string | null;
+  is_following: boolean;
+  followers_count: number;
+  following_count: number;
 }
 
 export interface Post {
@@ -71,6 +74,59 @@ export interface RegisterRequest {
 
 export interface TokenResponse {
   jwt_token: string;
+}
+
+export interface Topic {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  parent_id: string | null;
+  post_count: number;
+  is_following: boolean;
+  created_at: string;
+}
+
+export interface TopicTag {
+  slug: string;
+  name: string;
+  relevance: number;
+}
+
+export interface UserInterest {
+  topic_id: string;
+  slug: string;
+  name: string;
+  weight: number;
+}
+
+export interface TrendingTopic extends Topic {
+  post_velocity: number;
+  engagement_velocity: number;
+  score: number;
+}
+
+export interface FollowInfo {
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+}
+
+export interface GraphNode {
+  id: string;
+  name: string;
+  size: number;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  weight: number;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
 }
 
 export interface WSMessage {
